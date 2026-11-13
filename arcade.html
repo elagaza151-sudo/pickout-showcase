@@ -10,7 +10,25 @@ function updateScore(){score.textContent='نقاط الجولة: '+points+' / 4'
 function competitionOpen(){const now=Date.now();return !!(competition?.is_active&&competition.starts_at&&competition.ends_at&&now>=new Date(competition.starts_at).getTime()&&now<=new Date(competition.ends_at).getTime())}function finish(){finished=true;board.innerHTML='';status.textContent='🎉 خلصت الجولة! '+points+' نقاط';$('claim').hidden=!points||!user||!competitionOpen();updateScore()}
 function advance(){points++;round++;updateScore();if(round>=4){finish();return}render()}
 function setGame(g){current=names[g]?g:'memory';turn++;points=0;round=0;first=null;locked=false;finished=false;awarded=false;$('claim').hidden=true;title.textContent=names[current];document.querySelectorAll('[data-game]').forEach(b=>b.classList.toggle('active',b.dataset.game===current));render()}
-function render(){board.innerHTML='';updateScore();status.textContent='';if(current==='memory'){const cards=shuffle(['☕','🍩','🥤','🍰','☕','🍩','🥤','🍰'].map((v,i)=>({v,id:i})));let matched=0;cards.forEach(c=>{const b=button('❔',()=>{if(locked||b.disabled||b===first)return;b.textContent=c.v;if(!first){first=b;return}const previous=first;first=null;if(previous.textContent===b.textContent){previous.disabled=b.disabled=true;matched+=2;if(matched===8){points=4;round=4;finish()}else{points=matched/2;updateScore()}}else{locked=true;const t=turn;setTimeout(()=>{if(t!==turn)return;previous.textContent=b.textContent='❔';locked=false},650)}})})}else if(current==='catch'){status.textContent='اجمع 4 فناجين';const target=Math.floor(Math.random()*9);for(let i=0;i<9;i++)button(i===target?'☕':'🪵',()=>{if(i===target)advance();else status.textContent='جرّب تاني'})}else if(current==='barista'){const target=['☕','🥤','🍵','🧋'][Math.floor(Math.random()*4)];status.textContent='حضّر المشروب: '+target;shuffle(['☕','🥤','🍵','🧋']).forEach(v=>button(v,()=>{if(v===target)advance();else status.textContent='حاول تاني'}))}else{const drinks=[['لاتيه','🥛☕'],['شاي','🍵'],['عصير','🧃'],['دونات','🍩']],selected=drinks[Math.floor(Math.random()*drinks.length)];status.textContent='خمن المشروب: '+selected[1];shuffle(drinks.map(x=>x[0])).forEach(v=>button(v,()=>{if(v===selected[0])advance();else status.textContent='جرّب تاني'}))}}
+function render(){
+ board.replaceChildren();updateScore();status.textContent='';
+ if(current==='memory'){
+  const cards=shuffle(['☕','🍩','🥤','🍰','☕','🍩','🥤','🍰'].map((v,i)=>({v,id:i})));let matched=0;
+  cards.forEach(c=>{const b=button('❔',()=>{if(locked||b.disabled||b===first)return;b.textContent=c.v;if(!first){first=b;return}const previous=first;first=null;if(previous.textContent===b.textContent){previous.disabled=b.disabled=true;matched+=2;points=matched/2;updateScore();if(matched===8){round=4;finish()}}else{locked=true;const t=turn;setTimeout(()=>{if(t!==turn)return;previous.textContent=b.textContent='❔';locked=false},650)}})})
+ }else if(current==='catch'){
+  status.textContent='التقط فنجان القهوة، وتجنب العوائق. اجمع 4 فناجين.';
+  const target=Math.floor(Math.random()*9);
+  for(let i=0;i<9;i++)button(i===target?'☕':'🪵',()=>{if(i===target)advance();else{status.textContent='خسرت الجولة! حاول مرة تانية';finished=true;board.querySelectorAll('button').forEach(b=>b.disabled=true);$('restart').focus()}});
+ }else if(current==='barista'){
+  const orders=[['لاتيه','☕','🥛'],['آيس كوفي','🧊','☕'],['شاي','💧','🍵'],['موكا','☕','🍫']];
+  const order=orders[round];status.textContent='حضّر '+order[0]+' بالترتيب: '+order.slice(1).join(' ثم ');
+  let step=1;shuffle(['☕','🥛','🧊','🍵','💧','🍫']).forEach(v=>button(v,()=>{if(v!==order[step]){status.textContent='مكوّن غلط! الجولة انتهت';finished=true;board.querySelectorAll('button').forEach(b=>b.disabled=true);return}step++;if(step>=order.length)advance();else status.textContent='تمام! اختار المكوّن التالي'}))
+ }else{
+  const drinks=[['لاتيه','قهوة بالحليب','☕🥛'],['شاي','مشروب أوراق دافئ','🍵'],['عصير','مشروب فاكهة طبيعي','🧃'],['موكا','قهوة بالشوكولاتة','☕🍫']];
+  const selected=drinks[round];status.textContent='خمن المشروب من الوصف: '+selected[1]+' '+selected[2];
+  shuffle(drinks.map(x=>x[0])).forEach(v=>button(v,()=>{if(v===selected[0])advance();else{status.textContent='إجابة غلط! جرّب الجولة من جديد';finished=true;board.querySelectorAll('button').forEach(b=>b.disabled=true)}}))
+ }
+}
 async function refresh(){
 const [c,s]=await Promise.all([db.from('showcase_competition').select('*').order('id').limit(1).maybeSingle(),db.from('showcase_scores').select('display_name,points').order('points',{ascending:false}).limit(20)]);
 if(c.data){competition=c.data;const now=Date.now(),start=competition.starts_at?new Date(competition.starts_at):null,end=competition.ends_at?new Date(competition.ends_at):null;
