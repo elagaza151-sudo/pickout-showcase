@@ -23,8 +23,8 @@
 <label class="checkline"><input id="offerActive" type="checkbox" checked> العرض مفعّل</label>
 <div class="offer-preview" id="offerPreview"></div>
 <button id="offerSubmit" type="submit">+ حفظ العرض</button><button id="offerCancel" class="secondary" type="button" hidden>إلغاء التعديل</button>
-</form><div id="offerList" class="offer-list"></div><p class="note">العروض هنا مسودات محلية في المتصفح، وليست خصومات مطبّقة على موقع العميل حتى يتم ربطها بقاعدة البيانات.</p></section>
-<p id="status" role="status"></p>
+</form><div id="offerList" class="offer-list"></div><p class="note">العروض تُحفظ في Supabase الخاص بالـShowcase، وتظهر على موقع العميل. تطبيق خصم مالي على طلبات حقيقية غير متاح في نسخة العرض.</p></section>
+<section class="panel"><h2>إدارة مسابقة الألعاب</h2><p>غيّر اسم المسابقة والجائزة وفعّلها أو أوقفها. الترتيب الحقيقي من حسابات Google، والمنافسون الافتراضيون ظاهرون بعلامة تجريبي.</p><form id="competitionForm" class="quick-grid"><label>اسم المسابقة<input id="competitionTitle" required></label><label>الجائزة<input id="competitionPrize" required></label><label>تاريخ البداية<input id="competitionStart" type="datetime-local"></label><label>تاريخ النهاية<input id="competitionEnd" type="datetime-local"></label><label class="checkline"><input id="competitionActive" type="checkbox"> المسابقة شغالة</label><button type="submit">حفظ المسابقة</button></form><h3>ترتيب اللاعبين الحقيقيين</h3><div id="adminLeaderboard">جاري التحميل...</div></section><p id="status" role="status"></p>
 <section class="panel"><h2>إدارة المنتجات</h2><p>تقدر تعدّل بيانات الأصناف الموجودة مباشرة من الجدول، وبعد التعديل اضغط حفظ التعديلات.</p><div class="actions"><button id="save" type="button">حفظ تعديلات المنتجات والألعاب</button></div>
 <div class="table-wrap"><table><thead><tr><th>القسم</th><th>الاسم</th><th>السعر (جنيه)</th><th>إجراء</th></tr></thead><tbody id="products"></tbody></table></div></section>
 <section class="panel"><h2>تشغيل وإيقاف الألعاب</h2><div class="game-grid" id="games"></div></section></section></main>
@@ -47,7 +47,7 @@ byId('quickAdd').addEventListener('submit',async e=>{
 });
 const key='pickout-showcase-offer-drafts-v1';
 const safe=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let offers=[];try{offers=JSON.parse(localStorage.getItem(key)||'[]');if(!Array.isArray(offers))offers=[]}catch(e){offers=[]}
+let offers=[];
 let editing=-1;
 const form=byId('offerForm'),scope=byId('offerScope'),type=byId('offerType'),target=byId('offerTarget');
 const categories=['مشروبات ساخنة','مشروبات باردة','مشروبات أخرى','عصائر','حلويات'];
@@ -64,26 +64,25 @@ function updatePreview(){
  byId('offerDiscount').max=type.value==='percent'?'100':'';
  byId('offerPreview').textContent=title+' | '+amount+labels[type.value]+' | '+(scope.value==='all'?'كل المنيو':target.value||'حدد الهدف');
 }
-function persist(){localStorage.setItem(key,JSON.stringify(offers))}
+async function refreshOffers(){const {data,error}=await db.from('showcase_offers').select('*').order('id',{ascending:false});if(error){setStatus('تعذر تحميل العروض: '+error.message);return}offers=(data||[]).map(o=>({...o,discount:Number(o.discount),type:o.offer_type,active:o.is_active,start:o.start_date,end:o.end_date,min:o.min_order,limit:o.usage_limit}));renderOffers()}
 function resetEditor(){editing=-1;form.reset();byId('offerSubmit').textContent='+ حفظ العرض';byId('offerCancel').hidden=true;updateTargets()}
 function renderOffers(){
  byId('offerList').innerHTML=offers.map((o,i)=>'<div class="offer-entry"><div><b>'+safe(o.title)+'</b> — '+safe(o.discount)+(o.type==='percent'?'%':' جنيه')+'<p>'+safe(o.description||'')+' · '+safe(o.scope==='all'?'كل المنيو':o.target||'')+' · '+(o.active===false?'غير مفعّل':'مفعّل')+'</p></div><div class="offer-buttons"><button type="button" class="secondary" data-offer-edit="'+i+'">تعديل</button><button type="button" class="danger" data-offer-delete="'+i+'">حذف</button></div></div>').join('')
 }
 scope.addEventListener('change',updateTargets);type.addEventListener('change',updatePreview);
 form.addEventListener('input',updatePreview);
-form.addEventListener('submit',e=>{
+form.addEventListener('submit',async e=>{
  e.preventDefault();const title=byId('offerTitle').value.trim(),discount=Number(byId('offerDiscount').value),description=byId('offerDescription').value.trim();
  if(!title||!Number.isFinite(discount)||discount<=0||(type.value==='percent'&&discount>100)){setStatus('راجع اسم العرض وقيمته');return}
  const start=byId('offerStart').value,end=byId('offerEnd').value;
  if(start&&end&&end<start){setStatus('تاريخ النهاية لازم يكون بعد البداية');return}
  const offer={title,discount,description,type:type.value,scope:scope.value,target:scope.value==='all'?'':target.value,start,end,code:byId('offerCode').value.trim(),min:Number(byId('offerMin').value)||0,limit:Number(byId('offerLimit').value)||null,active:byId('offerActive').checked};
- if(editing>=0)offers[editing]=offer;else offers.push(offer);
- persist();renderOffers();resetEditor();setStatus('تم حفظ مسودة العرض على المتصفح فقط');
+ const payload={title:offer.title,offer_type:offer.type,discount:offer.discount,scope:offer.scope,target:offer.target,start_date:offer.start||null,end_date:offer.end||null,code:offer.code,min_order:offer.min,usage_limit:offer.limit,description:offer.description,is_active:offer.active};const row=editing>=0?offers[editing]:null;const {error}=row?await db.from('showcase_offers').update(payload).eq('id',row.id):await db.from('showcase_offers').insert(payload);if(error){setStatus('تعذر حفظ العرض: '+error.message);return}resetEditor();await refreshOffers();setStatus('تم حفظ العرض في Supabase');
 });
 byId('offerCancel').addEventListener('click',resetEditor);
-byId('offerList').addEventListener('click',e=>{
+byId('offerList').addEventListener('click',async e=>{
  const edit=e.target.dataset.offerEdit,del=e.target.dataset.offerDelete;
- if(del!==undefined){if(!confirm('حذف مسودة العرض؟'))return;offers.splice(Number(del),1);persist();renderOffers();resetEditor();return}
+ if(del!==undefined){if(!confirm('حذف مسودة العرض؟'))return;const {error}=await db.from('showcase_offers').delete().eq('id',offers[Number(del)].id);if(error){setStatus(error.message);return}await refreshOffers();resetEditor();return}
  if(edit===undefined)return;editing=Number(edit);const o=offers[editing];if(!o)return;
  byId('offerTitle').value=o.title||'';type.value=o.type||'percent';byId('offerDiscount').value=o.discount||'';
  scope.value=o.scope||'all';updateTargets();target.value=o.target||'';
@@ -91,6 +90,13 @@ byId('offerList').addEventListener('click',e=>{
  byId('offerDescription').value=o.description||'';byId('offerActive').checked=o.active!==false;
  byId('offerSubmit').textContent='حفظ تعديل العرض';byId('offerCancel').hidden=false;updatePreview();form.scrollIntoView({behavior:'smooth',block:'start'});
 });
-renderOffers();updateTargets();
+refreshOffers();updateTargets();
+})();
+</script><script id="showcase-competition-admin">
+(async function(){
+const $=id=>document.getElementById(id);let competitionId=null;
+async function refreshCompetition(){const [c,p]=await Promise.all([db.from('showcase_competition').select('*').order('id').limit(1).maybeSingle(),db.from('showcase_scores').select('display_name,points').order('points',{ascending:false}).limit(30)]);if(c.data){const x=c.data;competitionId=x.id;$('competitionTitle').value=x.title;$('competitionPrize').value=x.prize;$('competitionActive').checked=x.is_active;$('competitionStart').value=x.starts_at?new Date(x.starts_at).toISOString().slice(0,16):'';$('competitionEnd').value=x.ends_at?new Date(x.ends_at).toISOString().slice(0,16):''}if(p.error){$('adminLeaderboard').textContent=p.error.message;return}const root=$('adminLeaderboard');root.replaceChildren();(p.data||[]).forEach((x,i)=>{const div=document.createElement('p');div.textContent=(i+1)+'. '+x.display_name+' — '+x.points+' نقطة';root.append(div)});if(!p.data?.length)root.textContent='لسه مفيش لاعبين حقيقيين مسجلين'}
+$('competitionForm').addEventListener('submit',async e=>{e.preventDefault();if(!competitionId)return;const payload={title:$('competitionTitle').value.trim(),prize:$('competitionPrize').value.trim(),is_active:$('competitionActive').checked,starts_at:$('competitionStart').value?new Date($('competitionStart').value).toISOString():null,ends_at:$('competitionEnd').value?new Date($('competitionEnd').value).toISOString():null,updated_at:new Date().toISOString()};const {error}=await db.from('showcase_competition').update(payload).eq('id',competitionId);setStatus(error?'تعذر حفظ المسابقة: '+error.message:'تم حفظ إعدادات المسابقة');if(!error)refreshCompetition()});
+const panel=$('adminPanel');const observer=new MutationObserver(()=>{if(!panel.hidden){refreshCompetition();observer.disconnect()}});observer.observe(panel,{attributes:true,attributeFilter:['hidden']});if(!panel.hidden)refreshCompetition();
 })();
 </script></body></html>
