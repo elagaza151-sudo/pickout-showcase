@@ -1828,4 +1828,62 @@ function active(id){links.forEach(a=>a.classList.toggle('nav-current',a.getAttri
 links.forEach(a=>a.addEventListener('click',()=>active(a.getAttribute('href').slice(1))));
 if('IntersectionObserver'in window){const io=new IntersectionObserver(entries=>{const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio);if(visible.length)active(visible[0].target.id)},{rootMargin:'-110px 0px -45% 0px',threshold:[0,.1,.3,.6]});sections.forEach(s=>io.observe(s))}
 })();
-</script><script id="showcase-coffee-lab-card-i18n">(function(){const nodes=[...document.querySelectorAll('a[href="./coffee-lab.html"],a[href="./barista-simulator.html"],a[href="./latte-art.html"]')].flatMap(a=>[a,a.previousElementSibling,a.previousElementSibling?.previousElementSibling]).filter(el=>el?.dataset?.ar);function sync(){const english=localStorage.getItem('pickout-showcase-language')==='en';nodes.forEach(el=>el.textContent=english?el.dataset.en:el.dataset.ar)}sync();document.addEventListener('click',e=>{if(e.target.closest('[id*="lang"],[class*="lang"],[onclick*="Language"]')){setTimeout(sync,0);setTimeout(sync,150)}});window.addEventListener('storage',sync)})();</script></body></html>
+</script><script id="showcase-coffee-lab-card-i18n">(function(){const nodes=[...document.querySelectorAll('a[href="./coffee-lab.html"],a[href="./barista-simulator.html"],a[href="./latte-art.html"]')].flatMap(a=>[a,a.previousElementSibling,a.previousElementSibling?.previousElementSibling]).filter(el=>el?.dataset?.ar);function sync(){const english=localStorage.getItem('pickout-showcase-language')==='en';nodes.forEach(el=>el.textContent=english?el.dataset.en:el.dataset.ar)}sync();document.addEventListener('click',e=>{if(e.target.closest('[id*="lang"],[class*="lang"],[onclick*="Language"]')){setTimeout(sync,0);setTimeout(sync,150)}});window.addEventListener('storage',sync)})();</script><script id="po-center-only-zoom-runtime-v12">
+(function(){
+ const root=document.getElementById('menuCards');
+ if(!root||!window.matchMedia('(max-width:767px)').matches)return;
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ let active=null,raf=0;
+ function update(){
+  raf=0;
+  const center=window.innerHeight/2;
+  let closest=null,best=Infinity;
+  for(const card of root.children){
+   if(!card.classList.contains('card'))continue;
+   const rect=card.getBoundingClientRect();
+   if(rect.bottom<center-160||rect.top>center+160)continue;
+   const art=card.querySelector('.productArt');
+   if(!art||!art.querySelector('.photo-stage img'))continue;
+   const photo=art.getBoundingClientRect();
+   if(photo.bottom<center-95||photo.top>center+95)continue;
+   const d=Math.abs((photo.top+photo.bottom)/2-center);
+   if(d<best){best=d;closest=card;}
+  }
+  if(closest===active)return;
+  if(active)active.classList.remove('po-center-zoom');
+  active=closest;
+  if(active)active.classList.add('po-center-zoom');
+ }
+ function schedule(){if(!raf)raf=requestAnimationFrame(update)}
+ const mutations=new MutationObserver(()=>{if(active&&!root.contains(active))active=null;schedule()});
+ mutations.observe(root,{childList:true});
+ window.addEventListener('scroll',schedule,{passive:true});
+ window.addEventListener('resize',schedule,{passive:true});
+ schedule();
+})();
+</script>
+<style id="po-mobile-footer-controls-clearance">
+@media(max-width:767px){
+ footer{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important}
+ .cart-fab,#pickout-language-switch{
+  transition:opacity .35s ease,transform .4s cubic-bezier(.22,1,.36,1),visibility .35s!important;
+ }
+ body.po-footer-visible .cart-fab,
+ body.po-footer-visible #pickout-language-switch{
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important;
+  transform:translateY(28px) scale(.94)!important;
+ }
+}
+</style>
+<script id="po-mobile-footer-controls-clearance-runtime">
+(function(){
+ const footer=document.querySelector('footer');if(!footer||!('IntersectionObserver' in window))return;
+ const mobile=window.matchMedia('(max-width:767px)');
+ const observer=new IntersectionObserver(entries=>{
+  document.body.classList.toggle('po-footer-visible',mobile.matches&&entries[0].isIntersecting);
+ },{threshold:0,rootMargin:'0px 0px 0px 0px'});
+ observer.observe(footer);
+ mobile.addEventListener('change',()=>{if(!mobile.matches)document.body.classList.remove('po-footer-visible')});
+})();
+</script>
+</body></html>
