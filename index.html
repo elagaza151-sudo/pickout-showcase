@@ -1420,6 +1420,34 @@ html:not(.po-scene-ready) body.po-loading-active #pickoutSplash2026{background:#
   #menu,#showcaseOffers,#showcaseCompetition{padding:22px 14px;border-radius:20px}
 }
 </style>
+<style id="showcase-original-photo-wall-restore-v1">
+/* Restore the original photographic red-brick and raised walnut-panel scene.
+   The later synthetic liveCafe layers must not paint over the original backdrop. */
+body{background:#2b1912!important}
+body:before,body:after{display:none!important}
+#liveCafe{display:none!important}
+#pickoutBackdrop{
+  display:block!important;visibility:visible!important;opacity:1!important;
+  position:fixed!important;inset:0!important;z-index:0!important;
+  pointer-events:none!important;background:#402113!important;
+}
+#pickoutBackdrop .backdrop-bricks{
+  background-color:#8c3e2d!important;
+  background-image:linear-gradient(110deg,rgba(91,26,18,.18),rgba(130,52,33,.05) 48%,rgba(27,12,9,.38)),url("https://commons.wikimedia.org/wiki/Special:FilePath/Red_brick_texture_wall.jpg?width=1024")!important;
+  background-size:100% 100%,auto 470px!important;
+  background-repeat:no-repeat,repeat!important;
+  background-position:center,center top!important;
+}
+#pickoutBackdrop .backdrop-wood{
+  background-color:#2c1a12!important;
+  background-image:linear-gradient(90deg,rgba(8,5,4,.18),transparent 18%,rgba(230,166,99,.07) 47%,transparent 72%,rgba(9,5,4,.3)),repeating-linear-gradient(90deg,#23140e 0 8px,#66432c 9px 13px,#392317 14px 20px,#28170f 21px 25px,#3b2418 26px 268px,#180e0a 269px 276px,#6d4930 277px 281px,#291910 282px 292px),linear-gradient(180deg,#5c3925,#2b1a12)!important;
+  background-size:100% 100%,292px 100%,100% 100%!important;
+  background-position:center,0 0,center!important;
+  background-repeat:no-repeat,repeat-x,no-repeat!important;
+}
+body>header,body>main,body>footer{position:relative!important;z-index:2!important}
+#showcaseBackgroundDust{z-index:1!important;pointer-events:none!important}
+</style>
 </head>
 <style id="showcase-isolation">.cart-fab,.cart-drawer,#poCartDrawer,#poCartFab,#poFloatingCart,#poOrderTracker,#poCustomerAccount,#poLoginModal{display:none!important}.game-highlight .ico{font-size:58px;margin:20px auto}#menuCards>.card{transition:transform .45s ease,box-shadow .45s ease}#menuCards>.card:hover{transform:translateY(-9px) scale(1.025)}@media(max-width:767px){#menuCards>.card{opacity:1!important;transform:none!important}}
 /* Original held-hover zoom: only the card under the pointer moves */
