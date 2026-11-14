@@ -57,4 +57,4 @@ $('login').onclick=async()=>{const {error}=await db.auth.signInWithOAuth({provid
 $('logout').onclick=async()=>{await db.auth.signOut();refresh()};
 $('claim').onclick=async()=>{if(!finished||claimed||!claimable||!window.ShowcaseGPS.state(gpsGame))return;$('claim').disabled=true;try{await window.ShowcaseGPS.claim(gpsGame,claimable,$('awardMsg'));claimed=true}catch(e){console.warn('GPS claim rejected',e)}finally{$('claim').disabled=false;updateCompetition()}};
 db.auth.onAuthStateChange(()=>setTimeout(refresh,0));paintLabels();refresh();$('instruction').textContent=t('اضغط ابدأ عشان تلعب','Press start to play');
-</script></body></html>
+</script><script>(function(){function sendHeight(){if(window.parent===window)return;const h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight);window.parent.postMessage({type:'pickout-game-height',height:h},location.origin)}window.addEventListener('load',sendHeight);window.addEventListener('resize',sendHeight);if(window.ResizeObserver){new ResizeObserver(sendHeight).observe(document.body)}setTimeout(sendHeight,400)})();</script></body></html>
