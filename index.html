@@ -1525,7 +1525,7 @@ const tr=(ar,en)=>isEn()?en:ar;
 const menu=()=>typeof pickoutMenu!=='undefined'?pickoutMenu.filter(x=>x&&Number(x[2])>=0):[];
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]));
 const random=a=>a[Math.floor(Math.random()*a.length)];
-const modal=$('showcaseGameModal'),content=$('showcaseGameContent');
+const modal=$('showcaseGameModal'),content=$('showcaseGameContent');if(!modal||!content)return;
 window.closeShowcaseGame=()=>{modal.style.display='none';content.replaceChildren()};
 function wrap(title,body){content.innerHTML='<h2 style="margin-top:0">'+title+'</h2>'+body+'<p style="opacity:.7;font-size:13px">'+tr('أداة ترفيهية — لا تضيف نقاط للمسابقة الأسبوعية.','For fun only — does not earn weekly competition points.')+'</p>';modal.style.display='flex'}
 function showPick(p){const name=p?.[1]||tr('مشروب','Drink'),price=Number(p?.[2]||0);$('toolResult').textContent=name+' — '+price+' '+tr('جنيه','EGP')}
@@ -1547,4 +1547,5 @@ $('toolPick').onclick=()=>{const total=Number($('toolTotal').value),people=Numbe
 }
 };
 })();
-</script></body></html>
+</script>
+</body></html>
