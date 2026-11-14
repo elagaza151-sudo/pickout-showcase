@@ -13,7 +13,7 @@ function setGame(g){stopTimer();clearClock();current=names[g]?g:'memory';turn++;
 let gameTimer=null,gameStarted=0,mistakes=0,combo=0;
 function stopTimer(){if(gameTimer){clearInterval(gameTimer);gameTimer=null}}
 function gameOver(message){stopTimer();finished=true;locked=true;status.textContent=message+' — نتيجتك: '+points+' من 4';board.querySelectorAll('button').forEach(b=>b.disabled=true);$('claim').hidden=!competitionOpen()||!user||!points||awarded;updateScore()}
-function timer(seconds){stopTimer();const deadline=Date.now()+seconds*1000;const token=turn;gameTimer=setInterval(()=>{if(token!==turn||finished){stopTimer();return}const remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));const clock=document.getElementById('gameClock');if(clock)clock.textContent='⏱ '+remaining+' ثانية';if(remaining<=0)gameOver('الوقت خلص')},150)}
+function timer(seconds){stopTimer();const deadline=Date.now()+seconds*1000;const token=turn;gameTimer=setInterval(()=>{if(token!==turn||finished){stopTimer();return}const remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));const clock=document.getElementById('gameClock');if(clock)clock.textContent='⏱ '+remaining+' '+(window.arcadeTranslate?window.arcadeTranslate('ثانية'):'ثانية');if(remaining<=0)gameOver('الوقت خلص')},150)}
 function clock(){const p=document.createElement('p');p.id='gameClock';p.style.cssText='font-weight:bold;color:#ffd189;font-size:18px';board.before(p);return p}
 function clearClock(){document.getElementById('gameClock')?.remove()}
 function render(){
@@ -29,7 +29,7 @@ function render(){
   const token=turn;let remaining=12,target=-1,bomb=-1,deadline=0;
   const tiles=Array.from({length:16},(_,i)=>button('·',()=>{if(finished)return;if(i===bomb){gameOver('💣 لمست القنبلة');return}if(i!==target){gameOver('ضغطة خاطئة');return}remaining--;points=Math.floor((12-remaining)/3);updateScore();if(!remaining){points=4;finish();return}move()}));
   function move(){target=Math.floor(Math.random()*16);do{bomb=Math.floor(Math.random()*16)}while(bomb===target);tiles.forEach((b,i)=>{b.textContent=i===target?'☕':i===bomb?'💣':'·';b.style.background=i===target?'#176b42':i===bomb?'#71302b':''});deadline=Date.now()+Math.max(480,1050-(12-remaining)*48)}
-  move();stopTimer();gameTimer=setInterval(()=>{if(token!==turn||finished){stopTimer();return}const left=Math.max(0,deadline-Date.now());const c=document.getElementById('gameClock');if(c)c.textContent='⏱ '+(left/1000).toFixed(1)+' ثانية | باقي '+remaining;if(left<=0)gameOver('القهوة اختفت')},40);
+  move();stopTimer();gameTimer=setInterval(()=>{if(token!==turn||finished){stopTimer();return}const left=Math.max(0,deadline-Date.now());const c=document.getElementById('gameClock');if(c)c.textContent='⏱ '+(left/1000).toFixed(1)+' '+(window.arcadeTranslate?window.arcadeTranslate('ثانية'):'ثانية')+' | '+(window.arcadeTranslate?window.arcadeTranslate('باقي '):'باقي ')+remaining;if(left<=0)gameOver('القهوة اختفت')},40);
  }else if(current==='barista'){
   const orders=[['Spanish Latte','🧊','☕','🥛','🍯'],['Iced Mocha','🧊','☕','🍫','🥛'],['Matcha Latte','🍵','🥛','🫧','🍯'],['Caramel Macchiato','🥛','☕','🍯','🫧']];
   const order=orders[round];status.textContent='👨‍🍳 MASTER BARISTA — طلب '+(round+1)+'/4: '+order[0]+' | الترتيب: '+order.slice(1).join(' → ')+' | غلطة واحدة = خسارة';
@@ -60,78 +60,75 @@ setGame(new URLSearchParams(location.search).get('game')||'memory');syncUser();r
 </script><script id="arcade-bilingual">
 (function(){
 'use strict';
-const translations=[
-['↩ الرجوع للمنيو','↩ Back to menu'],
-['مسابقة PICK & OUT الأسبوعية: 7 أيام من التحديات، والجوائز يحددها المدير. سجّل بـGoogle لحفظ نقاطك. لا تُحتسب نقاط قبل بداية المسابقة.','PICK & OUT weekly competition: 7 days of challenges. The manager decides the prizes. Sign in with Google to save your points. Points only count after the competition begins.'],
-['جاري تحميل المسابقة...','Loading competition...'],
+const btn=document.getElementById('arcadeLanguage');
+const dict=[
+['مسابقة PICK & OUT الأسبوعية: 7 أيام من التحديات، والجوائز يحددها المدير. سجّل بـGoogle لحفظ نقاطك. لا تُحتسب نقاط قبل بداية المسابقة.','PICK & OUT weekly competition: seven days of challenges. The manager sets the prizes. Sign in with Google to save points. Points count only after the competition begins.'],
+['المسابقة لم تبدأ بعد. المدير هو اللي بيحدد موعد بدايتها والجائزة، وبعد البداية يظهر ترتيب المشاركين الحقيقيين فقط.','The competition has not started. The manager sets the start date and prize. Only real players appear on the leaderboard after it begins.'],
+['مسابقة أسبوعية مدتها 7 أيام.','A seven-day weekly competition.'],
+['موعد البداية لم يحدده المدير بعد.','The manager has not set the start date yet.'],
+['النقاط تُحسب فقط أثناء المسابقة، والترتيب للاعبين المسجلين بـGoogle.','Points count only while the competition is active. Rankings include Google-signed-in players.'],
+['🔴 المسابقة لم تبدأ بعد أو متوقفة','🔴 Competition has not started or is paused'],
+['🕒 المسابقة لم تبدأ بعد','🕒 Competition has not started'],
+['🟢 المسابقة شغالة','🟢 Competition is live'],
+['جائزة سيتم الإعلان عنها','Prize to be announced'],
+['مسابقة PICK & OUT الأسبوعية','PICK & OUT weekly competition'],
+['مسابقة متوقفة','Competition paused'],
+['لسه مفيش مشاركين حقيقيين.','No real participants yet.'],
 ['سجّل بـGoogle لحفظ نقاطك','Sign in with Google to save points'],
 ['تسجيل الدخول بـGoogle','Sign in with Google'],['تسجيل الخروج','Sign out'],
-['🏆 ترتيب المسابقة','🏆 Competition leaderboard'],
-['المسابقة لم تبدأ بعد. المدير هو اللي بيحدد موعد بدايتها والجائزة، وبعد البداية يظهر ترتيب المشاركين الحقيقيين فقط.','The competition has not started. The manager sets its start date and prize. Only real participants appear after the start.'],
-['العب من جديد','Play again'],['حفظ نقاط الجولة','Save round points'],
-['نقاط الجولة','Round score'],['المسابقة لم تبدأ بعد','Competition has not started'],
-['الوقت خلص','Time is up'],['القهوة اختفت','The coffee disappeared'],['ضغطة خاطئة','Wrong tap'],['لمست القنبلة','You hit a bomb'],['إجابة غلط','Wrong answer'],['مكوّن غلط','Wrong ingredient'],['خلصت الجولة','Round complete'],
-['خطأين في الذاكرة','Two memory mistakes'],['نتيجتك','Your score'],['من 4','out of 4'],
-['احفظ أماكن 8 أزواج، وبعدها طابقها خلال 22 ثانية. خطأين وتنتهي الجولة!','Memorize 8 pairs, then match them in 22 seconds. Two mistakes end the round!'],
-['وقت الحفظ','Memorization time'],['ثوانٍ','seconds'],['ثانية','seconds'],
-['التقط 12 فنجان خلال أقل من ثانية لكل ظهور. تجنب القنابل','Catch 12 cups in under one second per appearance. Avoid bombs'],
-['بنلف تاني','Spinning again'],['طلب','Order'],['الترتيب','Sequence'],['غلطة واحدة = خسارة','One mistake = game over'],['باقي','Remaining'],['مكونات','ingredients'],
-['سؤال','Question'],['خطأ واحد = خسارة','One wrong answer = game over'],
-['نسبة الحليب أقل من اللاتيه، مع طبقة ميكروفوم رقيقة','Less milk than a latte, with a thin microfoam layer'],
-['يُستخلص بالنقع البارد الطويل، وليس بإسبريسو فوق ثلج','Extracted by long cold steeping, not espresso poured over ice'],
-['نسبة الإسبريسو للحليب الدافئ تقارب 1:1','Espresso and steamed milk are approximately 1:1'],
-['حلوى تُسكب فوقها جرعة إسبريسو ساخنة','A dessert topped with a shot of hot espresso'],
-['اتحفظت نقاطك! مجموعك','Points saved! Total'],['تعذر حفظ النقاط','Could not save points'],['لا يمكن حفظ نقاط حاليًا','Points cannot be saved yet'],['جاري','Loading'],['نقطة','points'],['لا يوجد مشاركون','No participants yet'],['المركز','Rank'],['المسابقة','Competition'],['سجّل','Sign in']
-];
-const extra=[
-['🔴 المسابقة لم تبدأ بعد أو متوقفة','🔴 Competition has not started or is paused'],
-['🟢 المسابقة شغالة','🟢 Competition is live'],
-['🕒 المسابقة لم تبدأ بعد','🕒 Competition has not started'],
-['الأسبوعية','Weekly'],['الجائزة:','Prize:'],['جائزة سيتم الإعلان عنها','Prize to be announced'],['مسابقة متوقفة','Competition paused'],
-['نقاطك بتتحفظ بعد كل جولة','Your points are saved after each round'],['مرحبًا','Welcome'],
-['لسه مفيش مشاركين حقيقيين.','No real participants yet.'],
-['تعذر تحميل الترتيب','Unable to load leaderboard'],
-['مسابقة أسبوعية مدتها 7 أيام.','A weekly competition lasting 7 days.'],
-['موعد البداية لم يحدده المدير بعد.','The manager has not set the start date yet.'],
-['النقاط تُحسب فقط أثناء المسابقة، والترتيب للاعبين المسجلين بـGoogle.','Points only count while the competition is active. Rankings are for players signed in with Google.'],
-['البداية:','Start:'],['النهاية:','End:'],['بعد كل جولة','after each round'],
-['ثوانٍ','seconds'],['ثانية','seconds']
-];
-const dictionary=[...translations,...extra].sort((a,b)=>b[0].length-a[0].length);
+['جاري تحميل المسابقة...','Loading competition...'],['🏆 ترتيب المسابقة','🏆 Competition leaderboard'],
+['الرجوع للمنيو','Back to menu'],['العب من جديد','Play again'],['حفظ نقاط الجولة','Save round points'],
+['مرحبًا','Welcome'],['نقاطك بتتحفظ بعد كل جولة','Your points are saved after every round'],
+['الجائزة:','Prize:'],['البداية:','Start:'],['النهاية:','End:'],
+['نقاط الجولة:','Round score:'],['الوقت خلص','Time is up'],['القهوة اختفت','The coffee disappeared'],
+['ضغطة خاطئة','Wrong tap'],['لمست القنبلة','You hit a bomb'],['إجابة غلط','Wrong answer'],
+['مكوّن غلط','Wrong ingredient'],['خلصت الجولة!','Round complete!'],['خسرت! خطأين في الذاكرة','Game over! Two memory mistakes'],
+['نتيجتك:','Your score:'],['من 4','out of 4'],['نقاط','points'],['نقطة','point'],
+['احفظ أماكن 8 أزواج، وبعدها طابقها خلال 22 ثانية. خطأين وتنتهي الجولة!','Memorize eight pairs, then match them within 22 seconds. Two mistakes end the game!'],
+['وقت الحفظ:','Memorize for:'],['ثوانٍ','seconds'],['ثانية','seconds'],
+['التقط 12 فنجان خلال أقل من ثانية لكل ظهور. تجنب القنابل','Catch 12 coffee cups in under a second each. Avoid bombs'],
+['غلطة واحدة = خسارة','One mistake = game over'],['خطأ واحد = خسارة','One mistake = game over'],
+['الترتيب:','Sequence:'],['طلب ','Order '],['سؤال ','Question '],['باقي ','Remaining '],['مكونات','ingredients'],
+['نسبة الحليب أقل من اللاتيه، مع طبقة ميكروفوم رقيقة','Less milk than a latte with a thin microfoam layer'],
+['يُستخلص بالنقع البارد الطويل، وليس بإسبريسو فوق ثلج','Made by long cold steeping, not espresso over ice'],
+['نسبة الإسبريسو للحليب الدافئ تقارب 1:1','Espresso and steamed milk are roughly 1:1'],
+['حلوى تُسكب فوقها جرعة إسبريسو ساخنة','A dessert topped with a hot espresso shot'],
+['اتحفظت نقاطك! مجموعك:','Points saved! Total:'],['تعذر حفظ النقاط:','Unable to save points:'],
+['المسابقة لم تبدأ بعد، لا يمكن حفظ نقاط حاليًا','Competition has not started. Points cannot be saved yet.'],
+['تعذر تحميل الترتيب','Unable to load leaderboard']
+].sort((a,b)=>b[0].length-a[0].length);
 let lang=localStorage.getItem('pickout-showcase-language')==='en'?'en':'ar';
-const btn=document.getElementById('arcadeLanguage'),originals=new WeakMap();
-function translate(source){if(lang==='ar')return source;let output=source;for(const [ar,en] of dictionary)output=output.split(ar).join(en);return output}
+const sources=new WeakMap();
+function translate(input){if(lang!=='en')return input;let output=input;for(const [ar,en] of dict)output=output.split(ar).join(en);return output}
+window.arcadeTranslate=function(input){return translate(String(input))};
+function render(){
+ document.documentElement.lang=lang;document.documentElement.dir=lang==='en'?'ltr':'rtl';btn.textContent=lang==='en'?'العربية':'English';
+ observer.disconnect();
+ const walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let node;
+ while(node=walk.nextNode()){
+  if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;
+  let source=sources.get(node);
+  if(source===undefined){source=node.nodeValue;sources.set(node,source)}
+  const translated=translate(source);
+  if(node.nodeValue!==translated)node.nodeValue=translated;
+ }
+ observer.observe(document.body,{subtree:true,childList:true,characterData:true});
+}
 const observer=new MutationObserver(records=>{
  observer.disconnect();
+ const touched=new Set();
  for(const record of records){
-  if(record.type==='characterData'){
-   const node=record.target;if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;
-   const old=originals.get(node);const now=node.nodeValue;
-   if(old===undefined||now!==translate(old)){originals.set(node,now);node.nodeValue=translate(now)}
-  }else{
-   for(const added of record.addedNodes){
-    const walker=document.createTreeWalker(added,NodeFilter.SHOW_TEXT);const nodes=[];
-    if(added.nodeType===3)nodes.push(added);
-    while(walker.nextNode())nodes.push(walker.currentNode);
-    for(const node of nodes){if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;originals.set(node,node.nodeValue);node.nodeValue=translate(node.nodeValue)}
-   }
+  if(record.type==='characterData'){const node=record.target;if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;sources.set(node,node.nodeValue);touched.add(node)}
+  else for(const added of record.addedNodes){
+   const nodes=[];if(added.nodeType===3)nodes.push(added);
+   if(added.nodeType===1){const walker=document.createTreeWalker(added,NodeFilter.SHOW_TEXT);while(walker.nextNode())nodes.push(walker.currentNode)}
+   for(const node of nodes){if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;sources.set(node,node.nodeValue);touched.add(node)}
   }
  }
- observe();
+ for(const node of touched){if(node.isConnected)node.nodeValue=translate(sources.get(node))}
+ observer.observe(document.body,{subtree:true,childList:true,characterData:true});
 });
-function observe(){observer.observe(document.body,{subtree:true,childList:true,characterData:true})}
-function applyAll(){
- observer.disconnect();
- document.documentElement.lang=lang;document.documentElement.dir=lang==='en'?'ltr':'rtl';btn.textContent=lang==='en'?'العربية':'English';
- const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let node;
- while(node=walker.nextNode()){
-  if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;
-  let source=originals.get(node);if(source===undefined){source=node.nodeValue;originals.set(node,source)}
-  const target=translate(source);if(node.nodeValue!==target)node.nodeValue=target;
- }
- observe();
-}
-btn.addEventListener('click',()=>{lang=lang==='en'?'ar':'en';localStorage.setItem('pickout-showcase-language',lang);applyAll()});
-applyAll();
+btn.onclick=()=>{lang=lang==='en'?'ar':'en';localStorage.setItem('pickout-showcase-language',lang);render()};
+render();
 })();
 </script></body></html>
