@@ -1744,10 +1744,16 @@ const showcaseAiEndpoint='https://lhkevukjvtyemleriskz.supabase.co/functions/v1/
 let pickoutChatHistory=[];
 const aiLang=()=>document.documentElement.lang==='en';
 async function callShowcaseAi(payload){
- const response=await fetch(showcaseAiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
- const data=await response.json().catch(()=>({}));
- if(!response.ok)throw new Error(data.error==='AI_NOT_CONFIGURED'?(aiLang()?'AI is not configured yet. The admin needs to add GEMINI_API_KEY in Supabase.':'الـAI لسه محتاج مفتاح Gemini في إعدادات Supabase.'):data.error||'AI service unavailable');
- return data.answer;
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),17000);
+ try{
+  const response=await fetch(showcaseAiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error==='AI_NOT_CONFIGURED'?(aiLang()?'AI is not configured yet. The admin needs to add GEMINI_API_KEY in Supabase.':'الـAI لسه محتاج مفتاح Gemini في إعدادات Supabase.'):data.error||'AI service unavailable');
+  if(!data.answer)throw new Error(aiLang()?'AI returned an empty answer.':'الـAI مرجعش رد.');
+  return data.answer;
+ }catch(error){if(error.name==='AbortError')throw new Error(aiLang()?'AI took too long. Please try again.':'الـAI اتأخر في الرد. جرّب تاني.');throw error}
+ finally{clearTimeout(timer)}
 }
 function aiGetPreferences(){return {mood:document.getElementById('aiMood')?.value||'any',budget:document.getElementById('aiBudget')?.value||'',kind:document.getElementById('aiKind')?.value||'any',sweetness:document.getElementById('aiSweet')?.value||'any'}}
 async function aiRecommend(){
