@@ -7,26 +7,36 @@ let current='memory',points=0,first=null,locked=false,turn=0,round=0,finished=fa
 function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function button(label,fn){const b=document.createElement('button');b.className='tile';b.textContent=label;b.onclick=fn;board.appendChild(b);return b}
 function updateScore(){score.textContent='نقاط الجولة: '+points+' / 4'}
-function competitionOpen(){const now=Date.now();return !!(competition?.is_active&&competition.starts_at&&competition.ends_at&&now>=new Date(competition.starts_at).getTime()&&now<=new Date(competition.ends_at).getTime())}function finish(){finished=true;board.innerHTML='';status.textContent='🎉 خلصت الجولة! '+points+' نقاط';$('claim').hidden=!points||!user||!competitionOpen();updateScore()}
+function competitionOpen(){const now=Date.now();return !!(competition?.is_active&&competition.starts_at&&competition.ends_at&&now>=new Date(competition.starts_at).getTime()&&now<=new Date(competition.ends_at).getTime())}function finish(){stopTimer();clearClock();finished=true;board.innerHTML='';status.textContent='🎉 خلصت الجولة! '+points+' نقاط';$('claim').hidden=!points||!user||!competitionOpen();updateScore()}
 function advance(){points++;round++;updateScore();if(round>=4){finish();return}render()}
-function setGame(g){current=names[g]?g:'memory';turn++;points=0;round=0;first=null;locked=false;finished=false;awarded=false;$('claim').hidden=true;title.textContent=names[current];document.querySelectorAll('[data-game]').forEach(b=>b.classList.toggle('active',b.dataset.game===current));render()}
+function setGame(g){stopTimer();clearClock();current=names[g]?g:'memory';turn++;points=0;round=0;first=null;locked=false;finished=false;awarded=false;$('claim').hidden=true;title.textContent=names[current];document.querySelectorAll('[data-game]').forEach(b=>b.classList.toggle('active',b.dataset.game===current));render()}
+let gameTimer=null,gameStarted=0,mistakes=0,combo=0;
+function stopTimer(){if(gameTimer){clearInterval(gameTimer);gameTimer=null}}
+function gameOver(message){stopTimer();finished=true;locked=true;status.textContent=message+' — نتيجتك: '+points+' من 4';board.querySelectorAll('button').forEach(b=>b.disabled=true);$('claim').hidden=!competitionOpen()||!user||!points||awarded;updateScore()}
+function timer(seconds){stopTimer();const deadline=Date.now()+seconds*1000;const token=turn;gameTimer=setInterval(()=>{if(token!==turn||finished){stopTimer();return}const remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));const clock=document.getElementById('gameClock');if(clock)clock.textContent='⏱ '+remaining+' ثانية';if(remaining<=0)gameOver('الوقت خلص')},150)}
+function clock(){const p=document.createElement('p');p.id='gameClock';p.style.cssText='font-weight:bold;color:#ffd189;font-size:18px';board.before(p);return p}
+function clearClock(){document.getElementById('gameClock')?.remove()}
 function render(){
- board.replaceChildren();updateScore();status.textContent='';
+ stopTimer();clearClock();board.replaceChildren();updateScore();status.textContent='';locked=false;clock();
  if(current==='memory'){
-  const cards=shuffle(['☕','🍩','🥤','🍰','☕','🍩','🥤','🍰'].map((v,i)=>({v,id:i})));let matched=0;
-  cards.forEach(c=>{const b=button('❔',()=>{if(locked||b.disabled||b===first)return;b.textContent=c.v;if(!first){first=b;return}const previous=first;first=null;if(previous.textContent===b.textContent){previous.disabled=b.disabled=true;matched+=2;points=matched/2;updateScore();if(matched===8){round=4;finish()}}else{locked=true;const t=turn;setTimeout(()=>{if(t!==turn)return;previous.textContent=b.textContent='❔';locked=false},650)}})})
+  status.textContent='🧠 طابق 4 أزواج في 30 ثانية. ركّز، كل محاولة غلط بتضيع وقت!';
+  const cards=shuffle(['☕','🍩','🥤','🍰','☕','🍩','🥤','🍰'].map((v,i)=>({v,id:i})));let matched=0;const token=turn;
+  cards.forEach(c=>{const b=button('❔',()=>{if(locked||b.disabled||b===first||finished)return;b.textContent=c.v;if(!first){first=b;return}const previous=first;first=null;if(previous.textContent===b.textContent){previous.disabled=b.disabled=true;matched+=2;points=matched/2;updateScore();if(matched===8){round=4;stopTimer();finish()}}else{locked=true;mistakes++;setTimeout(()=>{if(token!==turn||finished)return;previous.textContent=b.textContent='❔';locked=false},850)}})});
+  timer(30);
  }else if(current==='catch'){
-  status.textContent='التقط فنجان القهوة، وتجنب العوائق. اجمع 4 فناجين.';
-  const target=Math.floor(Math.random()*9);
-  for(let i=0;i<9;i++)button(i===target?'☕':'🪵',()=>{if(i===target)advance();else{status.textContent='خسرت الجولة! حاول مرة تانية';finished=true;board.querySelectorAll('button').forEach(b=>b.disabled=true);$('restart').focus()}});
+  status.textContent='⚡ اضغط على القهوة قبل ما تختفي! عندك 3 ثواني لكل فنجان.';
+  const token=turn;let target=-1,remaining=4;
+  const tiles=Array.from({length:9},(_,i)=>button('🪵',()=>{if(finished)return;if(i!==target){gameOver('ضغطت على عائق');return}remaining--;points++;updateScore();if(remaining===0){round=4;stopTimer();finish();return}move()}));
+  let moveDeadline=0;function move(){target=Math.floor(Math.random()*9);tiles.forEach((b,i)=>{b.textContent=i===target?'☕':'🪵';b.style.transform=i===target?'scale(1.08)':'scale(1)'});moveDeadline=Date.now()+3000}
+  move();stopTimer();gameTimer=setInterval(()=>{if(token!==turn||finished){stopTimer();return}const left=Math.max(0,Math.ceil((moveDeadline-Date.now())/1000));document.getElementById('gameClock').textContent='⏱ '+left+' ثانية | باقي '+remaining+' فناجين';if(left<=0)gameOver('القهوة اختفت')},100);
  }else if(current==='barista'){
   const orders=[['لاتيه','☕','🥛'],['آيس كوفي','🧊','☕'],['شاي','💧','🍵'],['موكا','☕','🍫']];
-  const order=orders[round];status.textContent='حضّر '+order[0]+' بالترتيب: '+order.slice(1).join(' ثم ');
-  let step=1;shuffle(['☕','🥛','🧊','🍵','💧','🍫']).forEach(v=>button(v,()=>{if(v!==order[step]){status.textContent='مكوّن غلط! الجولة انتهت';finished=true;board.querySelectorAll('button').forEach(b=>b.disabled=true);return}step++;if(step>=order.length)advance();else status.textContent='تمام! اختار المكوّن التالي'}))
+  const order=orders[round];status.textContent='👨‍🍳 طلب '+(round+1)+'/4: '+order[0]+' — حضّر المكونات بالترتيب '+order.slice(1).join(' ← ');
+  let step=1;shuffle(['☕','🥛','🧊','🍵','💧','🍫']).forEach(v=>button(v,()=>{if(finished)return;if(v!==order[step]){gameOver('مكوّن غلط!');return}step++;if(step>=order.length){stopTimer();advance()}else status.textContent='صح! اختار المكوّن اللي بعده'}));timer(12);
  }else{
-  const drinks=[['لاتيه','قهوة بالحليب','☕🥛'],['شاي','مشروب أوراق دافئ','🍵'],['عصير','مشروب فاكهة طبيعي','🧃'],['موكا','قهوة بالشوكولاتة','☕🍫']];
-  const selected=drinks[round];status.textContent='خمن المشروب من الوصف: '+selected[1]+' '+selected[2];
-  shuffle(drinks.map(x=>x[0])).forEach(v=>button(v,()=>{if(v===selected[0])advance();else{status.textContent='إجابة غلط! جرّب الجولة من جديد';finished=true;board.querySelectorAll('button').forEach(b=>b.disabled=true)}}))
+  const drinks=[['لاتيه','قهوة إسبريسو مع لبن مبخر','☕🥛'],['شاي','مشروب من أوراق منقوعة في ماء ساخن','🍵'],['عصير','مشروب مصنوع من فاكهة طازجة','🧃'],['موكا','قهوة مع شوكولاتة وحليب','☕🍫']];
+  const selected=drinks[round];status.textContent='🔍 سؤال '+(round+1)+'/4: '+selected[1]+' '+selected[2];
+  shuffle(drinks.map(x=>x[0])).forEach(v=>button(v,()=>{if(finished)return;if(v===selected[0]){stopTimer();advance()}else gameOver('إجابة غلط')}));timer(10);
  }
 }
 async function refresh(){
