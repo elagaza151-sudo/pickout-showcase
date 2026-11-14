@@ -21,7 +21,7 @@ function render(){
  if(current==='memory'){
   status.textContent='🧠 NIGHTMARE MEMORY — احفظ أماكن 8 أزواج، وبعدها طابقها خلال 22 ثانية. خطأين وتنتهي الجولة!';
   const symbols=['☕','🍩','🥤','🍰','🧋','🍵','🍪','🍫'],cards=shuffle([...symbols,...symbols].map((v,i)=>({v,id:i})));let matched=0;const token=turn;let errors=0;
-  const tiles=cards.map(c=>button(c.v,()=>{if(locked||banned.has(c.id)||finished)return;const b=tiles[c.id];b.textContent=c.v;if(!first){first={b,c};return}if(first.b===b)return;const prev=first;first=null;if(prev.c.v===c.v){b.disabled=prev.b.disabled=true;banned.add(c.id);banned.add(prev.c.id);matched+=2;points=Math.floor(matched/4);updateScore();if(matched===16){points=4;finish()}}else{errors++;locked=true;if(errors>=2){gameOver('خسرت! خطأين في الذاكرة');return}setTimeout(()=>{if(token!==turn||finished)return;b.textContent=prev.b.textContent='❔';locked=false},550)}}));
+  const tiles=cards.map((c,i)=>button(c.v,()=>{if(locked||banned.has(i)||finished)return;const b=tiles[i];b.textContent=c.v;if(!first){first={b,c,i};return}if(first.b===b)return;const prev=first;first=null;if(prev.c.v===c.v){b.disabled=prev.b.disabled=true;banned.add(i);banned.add(prev.i);matched+=2;points=Math.floor(matched/4);updateScore();if(matched===16){points=4;finish()}}else{errors++;locked=true;if(errors>=2){gameOver('خسرت! خطأين في الذاكرة');return}setTimeout(()=>{if(token!==turn||finished)return;b.textContent=prev.b.textContent='❔';locked=false},550)}}));
   const banned=new Set();tiles.forEach((b,i)=>b.textContent=cards[i].v);locked=true;status.textContent+=' — وقت الحفظ: 3 ثوانٍ';
   setTimeout(()=>{if(token!==turn||finished)return;tiles.forEach(b=>b.textContent='❔');locked=false;timer(22)},3000);
  }else if(current==='catch'){
