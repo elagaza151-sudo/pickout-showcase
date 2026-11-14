@@ -71,7 +71,7 @@ $('googleLogin').onclick=async()=>{const {error}=await db.auth.signInWithOAuth({
 $('googleLogout').onclick=async()=>{await db.auth.signOut();await syncUser()};
 $('claim').onclick=async()=>{if(!user||!finished||awarded||!activeGameSession)return;if(!competitionOpen()){$('awardStatus').textContent='المسابقة مغلقة';return}const session=activeGameSession;$('claim').disabled=true;try{await stepQueue;if(stepFailure||stepRecorded!==points)throw Error('خطوات اللعبة لم يتم توثيقها بالكامل');const coords=await getFreshCoordinates();if(session!==activeGameSession)throw Error('الجلسة انتهت');const {data,error}=await db.rpc('showcase_award_game_session',{p_session:session,p_game:current,p_points:points,...coords});if(error)throw Error(error.message);awarded=true;endSessionTracking();$('claim').hidden=true;$('awardStatus').textContent='✅ اتحفظت نقاط جولتك المباشرة! مجموعك: '+data;refresh()}catch(e){endSessionTracking();$('claim').hidden=true;$('awardStatus').textContent='🎮 الجولة دي للمتعة فقط، النقط مش هتتحسب: '+(e.code===1?'GPS مقفول أو مرفوض':e.message||'تعذر التحقق من GPS')}finally{$('claim').disabled=false}};
 document.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>setGame(b.dataset.game));$('restart').onclick=()=>setGame(current);
-setGame(new URLSearchParams(location.search).get('game')||'memory');syncUser();refresh();
+(async()=>{await Promise.all([syncUser(),refresh()]);await setGame(new URLSearchParams(location.search).get('game')||'memory')})().catch(e=>{$('presencePlayerStatus').textContent='🎮 العب بدون نقاط حاليًا: '+e.message});
 </script><script id="arcade-bilingual">
 (function(){
 const button=document.getElementById('arcadeLanguage');
