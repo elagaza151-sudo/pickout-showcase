@@ -83,27 +83,55 @@ const translations=[
 ['حلوى تُسكب فوقها جرعة إسبريسو ساخنة','A dessert topped with a shot of hot espresso'],
 ['اتحفظت نقاطك! مجموعك','Points saved! Total'],['تعذر حفظ النقاط','Could not save points'],['لا يمكن حفظ نقاط حاليًا','Points cannot be saved yet'],['جاري','Loading'],['نقطة','points'],['لا يوجد مشاركون','No participants yet'],['المركز','Rank'],['المسابقة','Competition'],['سجّل','Sign in']
 ];
+const extra=[
+['🔴 المسابقة لم تبدأ بعد أو متوقفة','🔴 Competition has not started or is paused'],
+['🟢 المسابقة شغالة','🟢 Competition is live'],
+['🕒 المسابقة لم تبدأ بعد','🕒 Competition has not started'],
+['الأسبوعية','Weekly'],['الجائزة:','Prize:'],['جائزة سيتم الإعلان عنها','Prize to be announced'],['مسابقة متوقفة','Competition paused'],
+['نقاطك بتتحفظ بعد كل جولة','Your points are saved after each round'],['مرحبًا','Welcome'],
+['لسه مفيش مشاركين حقيقيين.','No real participants yet.'],
+['تعذر تحميل الترتيب','Unable to load leaderboard'],
+['مسابقة أسبوعية مدتها 7 أيام.','A weekly competition lasting 7 days.'],
+['موعد البداية لم يحدده المدير بعد.','The manager has not set the start date yet.'],
+['النقاط تُحسب فقط أثناء المسابقة، والترتيب للاعبين المسجلين بـGoogle.','Points only count while the competition is active. Rankings are for players signed in with Google.'],
+['البداية:','Start:'],['النهاية:','End:'],['بعد كل جولة','after each round'],
+['ثوانٍ','seconds'],['ثانية','seconds']
+];
+const dictionary=[...translations,...extra].sort((a,b)=>b[0].length-a[0].length);
 let lang=localStorage.getItem('pickout-showcase-language')==='en'?'en':'ar';
-const originals=new WeakMap(),btn=document.getElementById('arcadeLanguage');
-const tracked=new Set();
-function translate(str){let out=str;if(lang==='en')for(const [ar,en] of translations)out=out.replaceAll(ar,en);return out}
-function refresh(){
- document.documentElement.lang=lang;document.documentElement.dir=lang==='en'?'ltr':'rtl';btn.textContent=lang==='en'?'العربية':'English';
- const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
- let node;while(node=walker.nextNode()){
-  if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;
-  let base=originals.get(node);
-  if(base===undefined){base=node.nodeValue;originals.set(node,base);tracked.add(node)}
-  const expected=translate(base);
-  if(node.nodeValue!==expected){
-   const current=node.nodeValue;
-   if(current!==base&&current!==translate(base)){base=current;originals.set(node,base)}
-   node.nodeValue=translate(base);
+const btn=document.getElementById('arcadeLanguage'),originals=new WeakMap();
+function translate(source){if(lang==='ar')return source;let output=source;for(const [ar,en] of dictionary)output=output.split(ar).join(en);return output}
+const observer=new MutationObserver(records=>{
+ observer.disconnect();
+ for(const record of records){
+  if(record.type==='characterData'){
+   const node=record.target;if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;
+   const old=originals.get(node);const now=node.nodeValue;
+   if(old===undefined||now!==translate(old)){originals.set(node,now);node.nodeValue=translate(now)}
+  }else{
+   for(const added of record.addedNodes){
+    const walker=document.createTreeWalker(added,NodeFilter.SHOW_TEXT);const nodes=[];
+    if(added.nodeType===3)nodes.push(added);
+    while(walker.nextNode())nodes.push(walker.currentNode);
+    for(const node of nodes){if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;originals.set(node,node.nodeValue);node.nodeValue=translate(node.nodeValue)}
+   }
   }
  }
+ observe();
+});
+function observe(){observer.observe(document.body,{subtree:true,childList:true,characterData:true})}
+function applyAll(){
+ observer.disconnect();
+ document.documentElement.lang=lang;document.documentElement.dir=lang==='en'?'ltr':'rtl';btn.textContent=lang==='en'?'العربية':'English';
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let node;
+ while(node=walker.nextNode()){
+  if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;
+  let source=originals.get(node);if(source===undefined){source=node.nodeValue;originals.set(node,source)}
+  const target=translate(source);if(node.nodeValue!==target)node.nodeValue=target;
+ }
+ observe();
 }
-btn.addEventListener('click',()=>{lang=lang==='en'?'ar':'en';localStorage.setItem('pickout-showcase-language',lang);for(const node of tracked){const base=originals.get(node);if(base!==undefined&&node.isConnected)node.nodeValue=translate(base)}refresh()});
-refresh();
-setInterval(refresh,350);
+btn.addEventListener('click',()=>{lang=lang==='en'?'ar':'en';localStorage.setItem('pickout-showcase-language',lang);applyAll()});
+applyAll();
 })();
 </script></body></html>
