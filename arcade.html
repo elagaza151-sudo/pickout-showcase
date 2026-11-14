@@ -19,24 +19,24 @@ function clearClock(){document.getElementById('gameClock')?.remove()}
 function render(){
  stopTimer();clearClock();board.replaceChildren();updateScore();status.textContent='';locked=false;clock();
  if(current==='memory'){
-  status.textContent='🧠 طابق 4 أزواج في 30 ثانية. ركّز، كل محاولة غلط بتضيع وقت!';
-  const cards=shuffle(['☕','🍩','🥤','🍰','☕','🍩','🥤','🍰'].map((v,i)=>({v,id:i})));let matched=0;const token=turn;
-  cards.forEach(c=>{const b=button('❔',()=>{if(locked||b.disabled||b===first||finished)return;b.textContent=c.v;if(!first){first=b;return}const previous=first;first=null;if(previous.textContent===b.textContent){previous.disabled=b.disabled=true;matched+=2;points=matched/2;updateScore();if(matched===8){round=4;stopTimer();finish()}}else{locked=true;mistakes++;setTimeout(()=>{if(token!==turn||finished)return;previous.textContent=b.textContent='❔';locked=false},850)}})});
-  timer(30);
+  status.textContent='🧠 طابق 6 أزواج في 35 ثانية. ركّز، كل محاولة غلط بتضيع وقت!';
+  const cards=shuffle(['☕','🍩','🥤','🍰','🧋','🍵','☕','🍩','🥤','🍰','🧋','🍵'].map((v,i)=>({v,id:i})));let matched=0;const token=turn;
+  cards.forEach(c=>{const b=button('❔',()=>{if(locked||b.disabled||b===first||finished)return;b.textContent=c.v;if(!first){first=b;return}const previous=first;first=null;if(previous.textContent===b.textContent){previous.disabled=b.disabled=true;matched+=2;points=Math.min(4,Math.floor(matched/3));updateScore();if(matched===12){round=4;stopTimer();finish()}}else{locked=true;mistakes++;setTimeout(()=>{if(token!==turn||finished)return;previous.textContent=b.textContent='❔';locked=false},850)}})});
+  timer(35);
  }else if(current==='catch'){
-  status.textContent='⚡ اضغط على القهوة قبل ما تختفي! عندك 3 ثواني لكل فنجان.';
-  const token=turn;let target=-1,remaining=4;
-  const tiles=Array.from({length:9},(_,i)=>button('🪵',()=>{if(finished)return;if(i!==target){gameOver('ضغطت على عائق');return}remaining--;points++;updateScore();if(remaining===0){round=4;stopTimer();finish();return}move()}));
-  let moveDeadline=0;function move(){target=Math.floor(Math.random()*9);tiles.forEach((b,i)=>{b.textContent=i===target?'☕':'🪵';b.style.transform=i===target?'scale(1.08)':'scale(1)'});moveDeadline=Date.now()+3000}
+  status.textContent='⚡ اضغط على القهوة قبل ما تختفي! السرعة بتزيد بعد كل فنجان.';
+  const token=turn;let target=-1,remaining=8;
+  const tiles=Array.from({length:9},(_,i)=>button('🪵',()=>{if(finished)return;if(i!==target){gameOver('ضغطت على عائق');return}remaining--;points=Math.floor((8-remaining)/2);updateScore();if(remaining===0){points=4;round=4;stopTimer();finish();return}move()}));
+  let moveDeadline=0;function move(){target=Math.floor(Math.random()*9);tiles.forEach((b,i)=>{b.textContent=i===target?'☕':'🪵';b.style.transform=i===target?'scale(1.08)':'scale(1)'});moveDeadline=Date.now()+Math.max(950,2300-(8-remaining)*160)}
   move();stopTimer();gameTimer=setInterval(()=>{if(token!==turn||finished){stopTimer();return}const left=Math.max(0,Math.ceil((moveDeadline-Date.now())/1000));document.getElementById('gameClock').textContent='⏱ '+left+' ثانية | باقي '+remaining+' فناجين';if(left<=0)gameOver('القهوة اختفت')},100);
  }else if(current==='barista'){
-  const orders=[['لاتيه','☕','🥛'],['آيس كوفي','🧊','☕'],['شاي','💧','🍵'],['موكا','☕','🍫']];
+  const orders=[['لاتيه','☕','🥛','🫧'],['آيس كوفي','🧊','☕','🥛'],['شاي','💧','🍵','🍯'],['موكا','☕','🍫','🥛']];
   const order=orders[round];status.textContent='👨‍🍳 طلب '+(round+1)+'/4: '+order[0]+' — حضّر المكونات بالترتيب '+order.slice(1).join(' ← ');
-  let step=1;shuffle(['☕','🥛','🧊','🍵','💧','🍫']).forEach(v=>button(v,()=>{if(finished)return;if(v!==order[step]){gameOver('مكوّن غلط!');return}step++;if(step>=order.length){stopTimer();advance()}else status.textContent='صح! اختار المكوّن اللي بعده'}));timer(12);
+  let step=1;shuffle(['☕','🥛','🧊','🍵','💧','🍫','🫧','🍯']).forEach(v=>button(v,()=>{if(finished)return;if(v!==order[step]){gameOver('مكوّن غلط!');return}step++;if(step>=order.length){stopTimer();advance()}else status.textContent='صح! اختار المكوّن اللي بعده'}));timer(Math.max(7,14-round*2));
  }else{
-  const drinks=[['لاتيه','قهوة إسبريسو مع لبن مبخر','☕🥛'],['شاي','مشروب من أوراق منقوعة في ماء ساخن','🍵'],['عصير','مشروب مصنوع من فاكهة طازجة','🧃'],['موكا','قهوة مع شوكولاتة وحليب','☕🍫']];
+  const drinks=[['فلات وايت','إسبريسو مع حليب مبخر ورغوة قليلة','☕🥛'],['ماتشا لاتيه','مسحوق شاي أخضر مخفوق مع الحليب','🍵🥛'],['كولد برو','قهوة تُنقع في الماء البارد لساعات','🧊☕'],['موكا','إسبريسو مع شوكولاتة وحليب','☕🍫']];
   const selected=drinks[round];status.textContent='🔍 سؤال '+(round+1)+'/4: '+selected[1]+' '+selected[2];
-  shuffle(drinks.map(x=>x[0])).forEach(v=>button(v,()=>{if(finished)return;if(v===selected[0]){stopTimer();advance()}else gameOver('إجابة غلط')}));timer(10);
+  shuffle(drinks.map(x=>x[0])).forEach(v=>button(v,()=>{if(finished)return;if(v===selected[0]){stopTimer();advance()}else gameOver('إجابة غلط')}));timer(Math.max(6,12-round*2));
  }
 }
 async function refresh(){
@@ -50,7 +50,7 @@ $('leaderboard').replaceChildren();if(s.error){$('leaderboard').textContent='ت�
 if(!s.data?.length)$('leaderboard').textContent='لسه مفيش مشاركين حقيقيين.';
 (s.data||[]).forEach((x,i)=>{const p=document.createElement('p');p.textContent=(i+1)+'. '+x.display_name+' — '+x.points+' نقطة';$('leaderboard').append(p)});
 }
-async function syncUser(){const {data}=await db.auth.getUser();user=data.user;$('googleLogin').hidden=!!user;$('googleLogout').hidden=!user;$('authInfo').textContent=user?'مرحبًا '+(user.user_metadata?.full_name||user.email)+' — نقاطك بتتحفظ بعد كل جولة':'سجّل بـGoogle لحفظ نقاطك';if(finished)$('claim').hidden=!user||awarded||!points}
+async function syncUser(){const {data}=await db.auth.getUser();user=data.user;$('googleLogin').hidden=!!user;$('googleLogout').hidden=!user;$('authInfo').textContent=user?'مرحبًا '+(user.user_metadata?.full_name||user.email)+' — نقاطك بتتحفظ بعد كل جولة':'سجّل بـGoogle لحفظ نقاطك';if(finished)$('claim').hidden=!user||awarded||!points||!competitionOpen()}
 $('googleLogin').onclick=async()=>{const {error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname+location.search}});if(error)$('awardStatus').textContent=error.message};
 $('googleLogout').onclick=async()=>{await db.auth.signOut();await syncUser()};
 $('claim').onclick=async()=>{if(!user||!finished||awarded)return;if(!competitionOpen()){$('awardStatus').textContent='المسابقة لم تبدأ بعد، لا يمكن حفظ نقاط حاليًا';return;}$('claim').disabled=true;const {data,error}=await db.rpc('showcase_award_points',{p_game:current,p_points:points});$('claim').disabled=false;if(error){$('awardStatus').textContent='تعذر حفظ النقاط: '+error.message;return}awarded=true;$('claim').hidden=true;$('awardStatus').textContent='✅ اتحفظت نقاطك! مجموعك: '+data;refresh()};
