@@ -1483,7 +1483,15 @@ const showcaseTranslations={
 'جنيه':'EGP','جنيه مصري':'EGP','أضف للسلة':'Add to Cart','غير متاح حاليًا':'Currently Unavailable',
 'اختار طلبك':'Choose Your Order','تابع طلبك':'Track Your Order','مكانك المفضل':'Your Favorite Spot',
 'تجربة Pickout':'The PICK & OUT Experience','كل حاجة بسيطة وواضحة، من غير دوشة.':'Everything is simple and easy.',
-'اكتشف مشروبك ووجبتك المفضلة':'Discover your favorite drink and meal'
+'اكتشف مشروبك ووجبتك المفضلة':'Discover your favorite drink and meal',
+'🔥 العروض والخصومات':'🔥 Offers & Discounts',
+'العروض الحالية من إدارة PICK & OUT':'Current offers from PICK & OUT management',
+'جاري تحميل العروض...':'Loading offers...',
+'🏆 مسابقة الألعاب الأسبوعية':'🏆 Weekly Arcade Competition',
+'المسابقة لم تبدأ بعد — المدير هيحدد موعد البداية والجائزة':'The competition has not started yet — the manager will announce the start date and prize',
+'المسابقة والترتيب':'Competition & Leaderboard',
+'مفيش عروض متاحة حاليًا':'No offers available right now',
+'تعذر تحميل العروض مؤقتًا':'Unable to load offers right now'
 };
 const showcaseOriginalText=new WeakMap();
 function showcaseTranslateText(value,lang){if(lang!=='en')return value;const t=value.trim();if(!t)return value;const result=showcaseTranslations[t]||(t.match(/^([0-9٠-٩.,]+) جنيه$/)?t.replace(/ جنيه$/,' EGP'):null);return result===null||result===undefined?value:value.replace(t,result)}
@@ -1549,12 +1557,14 @@ showcaseApplyLanguage();
 const db=window.supabase.createClient(window.SHOWCASE_SUPABASE_URL,window.SHOWCASE_SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 const [offers,competition]=await Promise.all([db.from('showcase_offers').select('title,offer_type,discount,scope,target,description,code,start_date,end_date').eq('is_active',true),db.from('showcase_competition').select('title,prize,is_active,starts_at').limit(1).maybeSingle()]);
 const root=document.getElementById('showcaseOffersCards');root.replaceChildren();
+const inEnglish=()=>localStorage.getItem('pickout-showcase-language')==='en';
+const bilingual=(ar,en)=>inEnglish()?en:ar;
 const today=new Date().toISOString().slice(0,10);
 const valid=(offers.data||[]).filter(x=>(!x.start_date||x.start_date<=today)&&(!x.end_date||x.end_date>=today));
-if(!valid.length){const p=document.createElement('p');p.textContent='مفيش عروض متاحة حاليًا';root.append(p)}
+if(!valid.length){const p=document.createElement('p');p.textContent=bilingual('مفيش عروض متاحة حاليًا','No offers available right now');root.append(p)}
 valid.forEach(o=>{const article=document.createElement('article');article.className='card';article.style.padding='22px';const h=document.createElement('h3');h.textContent=o.title;const p=document.createElement('p');p.textContent=(o.offer_type==='percent'?o.discount+'% خصم':o.offer_type==='fixed'?o.discount+' جنيه خصم':o.offer_type==='special'?'سعر خاص '+o.discount+' جنيه':'عرض خاص')+' · '+(o.scope==='all'?'كل المنيو':o.target);const d=document.createElement('p');d.textContent=o.description||'';article.append(h,p,d);if(o.code){const code=document.createElement('strong');code.textContent='كود: '+o.code;article.append(code)}root.append(article)});
-if(competition.data){document.getElementById('showcasePrizeText').textContent=competition.data.title+' — الجائزة: '+competition.data.prize+(!competition.data.starts_at||new Date(competition.data.starts_at)>new Date()?' (المسابقة لم تبدأ بعد)':competition.data.is_active?'':' (المسابقة متوقفة)')}
-}catch(e){const root=document.getElementById('showcaseOffersCards');if(root)root.textContent='تعذر تحميل العروض مؤقتًا'}})();
+if(competition.data){document.getElementById('showcasePrizeText').textContent=(inEnglish()&&/PICK\s*&\s*OUT|الأسبوعية/i.test(competition.data.title)?'PICK & OUT Weekly Competition':competition.data.title)+bilingual(' — الجائزة: ',' — Prize: ')+(inEnglish()&&/جائزة سيتم الإعلان عنها|لم تحدد|لم يتم/.test(competition.data.prize)?'To be announced':competition.data.prize)+(!competition.data.starts_at||new Date(competition.data.starts_at)>new Date()?bilingual(' (المسابقة لم تبدأ بعد)',' (Competition has not started yet)'):competition.data.is_active?'':bilingual(' (المسابقة متوقفة)',' (Competition paused)'))}
+}catch(e){const root=document.getElementById('showcaseOffersCards');if(root)root.textContent=localStorage.getItem('pickout-showcase-language')==='en'?'Unable to load offers right now':'تعذر تحميل العروض مؤقتًا'}})();
 </script>
 <style id="original-pickout-games-style">
 :root{--green:#08743d;--green2:#0d8b4b;--cream:#f5ead6;--brown:#3b1b10}
