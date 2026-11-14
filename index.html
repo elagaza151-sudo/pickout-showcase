@@ -1626,39 +1626,44 @@ body>*:not(#liveCafe){position:relative;z-index:1}
 </style><div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="dialog"><button class="close" onclick="closeModal()">×</button><div id="modalContent"></div></div></div><script id="original-pickout-games-copy">window.showcaseOriginalProducts=pickoutMenu.map((x,i)=>({id:i,name:x[1],name_ar:x[1],base_price:x[2],image_url:x[3]||''}));
 const egp=n=>Number(n||0).toLocaleString('ar-EG')+' ج';
 function openModal(type){const c=document.getElementById('modalContent'),modal=document.getElementById('modal');let html='';
- if(type==='payer')html=`<h3>🎡 مين يحاسب؟</h3><p>اكتب أسماء الشلة وحدد كام شخص هيتحاسب عليهم.</p><div class="game-field"><label>الأسماء (افصل بينهم بفاصلة)</label><textarea id="wheelNames" rows="2" placeholder="أحمد، سارة، يوسف، مريم"></textarea><div class="game-grid"><div><label>عدد الأشخاص اللي هيتقسم عليهم الحساب</label><select id="wheelCount"><option value="1">شخص واحد</option><option value="2">شخصين</option><option value="3">3 أشخاص</option></select></div><div><label>طريقة الاختيار</label><select id="wheelMode"><option value="random">اختيار عشوائي</option><option value="equal">تقسيم الحساب بالتساوي</option></select></div></div><div class="wheel-wrap"><div class="wheel-pointer"></div><div class="wheel" id="payerWheel"></div></div><button class="btn primary" onclick="spinPayerWheel()">لف العجلة</button><div id="wheelResult" class="game-result" hidden></div></div>`;
+ if(type==='payer')html=`<h3>🎡 مين يحاسب؟</h3><p>اكتب أسماء الشلة وحدد كام شخص هيتحاسب عليهم.</p><div class="game-field"><label>الأسماء (افصل بينهم بفاصلة)</label><textarea id="wheelNames" oninput="updatePayerWheelPreview()" rows="2" placeholder="أحمد، سارة، يوسف، مريم"></textarea><div class="game-grid"><div><label>عدد الأشخاص اللي هيتقسم عليهم الحساب</label><select id="wheelCount"><option value="1">شخص واحد</option><option value="2">شخصين</option><option value="3">3 أشخاص</option></select></div><div><label>طريقة الاختيار</label><select id="wheelMode"><option value="random">اختيار عشوائي</option><option value="equal">تقسيم الحساب بالتساوي</option></select></div></div><div class="wheel-wrap"><div class="wheel-pointer"></div><div class="wheel" id="payerWheel"></div></div><button class="btn primary" onclick="spinPayerWheel()">لف العجلة</button><div id="wheelResult" class="game-result" hidden></div></div>`;
  if(type==='ai')html=`<h3>☕ الباريستا الذكي</h3><p>احكيلي براحتك أو جاوب على الأسئلة، وأنا أظبطلك مشروب أو ديسرت من المنيو المتاح.</p><div class="game-field"><label>قولّي سؤالك أو وصف مودك (اختياري)</label><textarea id="aiFree" rows="2" placeholder="أنا مرهق وعايز حاجة ساقعة ومنعشة..."></textarea><div class="game-grid"><div><label>مودك إيه النهارده؟</label><select id="aiMood"><option value="any">اختارلي على ذوقك</option><option value="tired">محتاج أفوق</option><option value="happy">رايق ومبسوط</option><option value="stressed">مضغوط وعايز أهدى</option><option value="sweet">نفسي في حاجة حلوة</option><option value="fresh">عايز حاجة منعشة</option></select></div><div><label>الميزانية بالجنيه</label><input id="aiBudget" type="number" min="0" placeholder="مثلاً 100"></div><div><label>تحب إيه؟</label><select id="aiKind"><option value="any">أي حاجة</option><option value="hot">مشروب سخن</option><option value="cold">مشروب ساقع</option><option value="coffee">قهوة</option><option value="dessert">ديسرت</option><option value="food">أكل</option></select></div><div><label>تحب تسكرها؟</label><select id="aiSweet"><option value="any">عادي</option><option value="low">سكر خفيف</option><option value="sweet">حلوة</option><option value="none">من غير سكر</option></select></div></div><button class="btn" onclick="aiAskQuestion()">اسألني سؤال يساعدك تختار</button> <button class="btn primary" onclick="aiRecommend()">رشحلي حاجة</button><div id="aiResult" class="game-result" hidden></div><div style="border-top:1px solid #876647;margin-top:20px;padding-top:15px"><h3>💬 دردشة حرة مع الباريستا AI</h3><p style="font-size:12px;opacity:.8">اتكلم معايا في أي موضوع، اسألني عن المنيو أو احكيلي يومك! 🤖</p><div id="poAiChatHistory" style="max-height:250px;overflow:auto;display:grid;gap:9px;padding:8px 0" aria-live="polite"></div><textarea id="poAiChatInput" rows="2" maxlength="650" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();pickoutChatSend()}" placeholder="اكتب أي حاجة تحب نتكلم فيها..."></textarea><button class="btn primary" id="poAiChatSend" onclick="pickoutChatSend()">إرسال 💬</button> <button class="btn" onclick="pickoutChatHistory=[];document.getElementById('poAiChatHistory').innerHTML=''">محادثة جديدة</button></div></div>`;
  if(type==='spin')html=`<h3>✨ مزاجك علينا</h3><p>هنعدّي على اختيارات من المنيو بسرعة، وفي الآخر نطلعلك مشروب أو حلو يناسبك.</p><div class="spin-stage"><div class="spin-reel" id="drinkReel"><div class="spin-focus"></div><div class="spin-reel-track" id="drinkReelTrack"></div></div><div id="drinkSpinResult" class="spin-winner" hidden></div><button class="btn primary" id="startDrinkSpin" onclick="startDrinkSpin()">اختارلي دلوقتي 🎲</button></div>`;
  if(type==='split')html=`<h3>🧾 نقسم الحساب</h3><p>اكتب إجمالي الفاتورة وحدد عدد الأشخاص، وأنا أحسب نصيب كل واحد.</p><div class="game-field"><div class="game-grid"><div><label>إجمالي الحساب بالجنيه</label><input id="billTotal" type="number" min="0" step="0.01" placeholder="مثلاً 650"></div><div><label>عدد الأشخاص</label><input id="billPeople" type="number" min="1" max="100" value="2"></div></div><button class="btn primary" onclick="calculateSplit()">احسب التقسيمة</button><div id="splitResult" class="game-result" hidden></div></div>`;
- c.innerHTML=html;modal.classList.add('show');modal.querySelector('.dialog').classList.add('wide');
+ c.innerHTML=html;modal.classList.add('show');modal.querySelector('.dialog').classList.add('wide');modal.classList.remove('game-popup-leave');modal.classList.add('game-popup-enter');if(type==='payer')updatePayerWheelPreview();
 }
-const oldClose=window.closeModal;window.closeModal=function(){document.getElementById('modal').classList.remove('show');document.querySelector('#modal .dialog')?.classList.remove('wide')};
+const oldClose=window.closeModal;window.closeModal=function(){const modal=document.getElementById('modal');modal.classList.add('game-popup-leave');setTimeout(()=>{modal.classList.remove('show','game-popup-leave','game-popup-enter');modal.querySelector('.dialog')?.classList.remove('wide')},240)};
 function getNames(){return (document.getElementById('wheelNames')?.value||'').split(/[،,\n]/).map(x=>x.trim()).filter(Boolean)}
 let payerWheelBusy=false,payerWheelAngle=0;
-function spinPayerWheel(){
- const names=getNames(),count=Number(document.getElementById('wheelCount').value),wheel=document.getElementById('payerWheel'),result=document.getElementById('wheelResult');
- if(payerWheelBusy)return;
- if(!names.length){result.hidden=false;result.textContent='اكتب اسم واحد على الأقل.';return}
- if(count>names.length||count<1){result.hidden=false;result.textContent='راجع عدد الأشخاص.';return}
- payerWheelBusy=true;result.hidden=true;
+function updatePayerWheelPreview(){
+ const names=getNames(),wheel=document.getElementById('payerWheel');if(!wheel||payerWheelBusy)return;
+ if(!names.length){wheel.style.background='conic-gradient(#24573e,#a67a49,#24573e)';wheel.innerHTML='<div class="wheel-labels"><span style="top:50%;left:50%;transform:translate(-50%,-50%)">اكتب الأسماء 🎡</span></div>';return}
  const n=names.length,step=360/n;
  wheel.style.background='conic-gradient('+names.map((_,i)=>['#175f41','#8c5735','#ad844d','#315b4b','#6c4939','#9b6c40'][i%6]+' '+(i*step)+'deg '+((i+1)*step)+'deg').join(',')+')';
  wheel.innerHTML='<div class="wheel-labels">'+names.map((name,i)=>'<span style="transform:translate(-50%,-50%) rotate('+(i*step+step/2)+'deg) translateY(-98px) rotate('+(-(i*step+step/2))+'deg)">'+safeText(name)+'</span>').join('')+'</div>';
- const winnerIndex=Math.floor(Math.random()*n);
- const desired=(360-(winnerIndex+.5)*step)%360;
- const current=((payerWheelAngle%360)+360)%360;
- const extra=(desired-current+360)%360;
- payerWheelAngle+=2160+extra;
- wheel.style.transition='transform 6.4s cubic-bezier(.12,.76,.08,1)';
- requestAnimationFrame(()=>{wheel.style.transform='rotate('+payerWheelAngle+'deg)'});
- setTimeout(()=>{
- const chosen=[names[winnerIndex]];
- const remaining=names.filter((_,i)=>i!==winnerIndex).sort(()=>Math.random()-.5);
- chosen.push(...remaining.slice(0,count-1));
- result.hidden=false;
- result.innerHTML=document.getElementById('wheelMode').value==='equal'?'🎉 التقسيمة على: <b>'+chosen.map(safeText).join(' و ')+'</b>':'😄 اللي عليهم الحساب: <b>'+chosen.map(safeText).join(' و ')+'</b>';
- payerWheelBusy=false;
- },6500);
+}
+function spinPayerWheel(){
+ const names=getNames(),count=Number(document.getElementById('wheelCount').value),wheel=document.getElementById('payerWheel'),result=document.getElementById('wheelResult');
+ if(payerWheelBusy)return;
+ if(!names.length||count>names.length||count<1){result.hidden=false;result.textContent='اكتب أسماء كفاية لعدد الأشخاص المطلوب.';return}
+ payerWheelBusy=true;result.hidden=false;result.textContent='🎡 بنختار أول شخص...';
+ const remaining=names.map((name,index)=>({name,index})),chosen=[];
+ function next(){
+  const n=remaining.length,step=360/n;updateWheel(remaining.map(x=>x.name));
+  const winnerIndex=Math.floor(Math.random()*n),desired=(360-(winnerIndex+.5)*step)%360;
+  const current=((payerWheelAngle%360)+360)%360;
+  payerWheelAngle+=2160+(desired-current+360)%360;
+  wheel.style.transition='transform 4.3s cubic-bezier(.12,.76,.08,1)';
+  requestAnimationFrame(()=>wheel.style.transform='rotate('+payerWheelAngle+'deg)');
+  setTimeout(()=>{
+   chosen.push(remaining.splice(winnerIndex,1)[0].name);
+   result.innerHTML='🎉 الاختيارات: <b>'+chosen.map(safeText).join(' و ')+'</b>';
+   if(chosen.length<count){result.innerHTML+=' — بنلف تاني...';setTimeout(next,650)}
+   else{payerWheelBusy=false;result.innerHTML=(document.getElementById('wheelMode').value==='equal'?'🎉 التقسيمة على: ':'😄 اللي عليهم الحساب: ')+'<b>'+chosen.map(safeText).join(' و ')+'</b>';updateWheel(names)}
+  },4450)
+ }
+ function updateWheel(list){const n=list.length,step=360/n;wheel.style.background='conic-gradient('+list.map((_,i)=>['#175f41','#8c5735','#ad844d','#315b4b','#6c4939','#9b6c40'][i%6]+' '+(i*step)+'deg '+((i+1)*step)+'deg').join(',')+')';wheel.innerHTML='<div class="wheel-labels">'+list.map((name,i)=>'<span style="transform:translate(-50%,-50%) rotate('+(i*step+step/2)+'deg) translateY(-98px) rotate('+(-(i*step+step/2))+'deg)">'+safeText(name)+'</span>').join('')+'</div>'}
+ next();
 }
 function calculateSplit(){let total=Number(document.getElementById('billTotal').value),n=Math.floor(Number(document.getElementById('billPeople').value));let r=document.getElementById('splitResult');r.hidden=false;if(!(total>=0)||!(n>=1)||n>100){r.textContent='اكتب إجمالي صحيح وعدد أشخاص من 1 إلى 100.';return}let each=Math.floor(total*100/n)/100,rest=Math.round((total-each*n)*100)/100;r.innerHTML=`نصيب كل شخص: <b>${each.toFixed(2)} جنيه</b><br>عدد الأشخاص: ${n}<br>${rest?`الباقي بعد التقسيم: ${rest.toFixed(2)} جنيه`: 'الحساب متقسم بالتساوي تماماً.'}`}
 function aiAskQuestion(){let prompts=['تحب حاجة سخنة ولا ساقعة؟','عايز قهوة بطعم واضح ولا حاجة فاكهية ومنعشة؟','نفسك في مشروب بس ولا نضيف ديسرت معاه؟','تحب الطعم حلو وغني ولا خفيف؟'];let r=document.getElementById('aiResult');r.hidden=false;r.textContent='سؤال الباريستا ليك: '+prompts[Math.floor(Math.random()*prompts.length)]}
@@ -1691,7 +1696,7 @@ function startDrinkSpin(){
   result.hidden=false;
   const image=winner.image_url||'';
   result.innerHTML=(image?'<img src="'+safeText(image)+'" alt="">':'')+'<b>🎉 اختيارنا ليك: '+safeText(winner.name_ar||winner.name)+'</b><br><strong>'+Number(winner.base_price).toLocaleString('ar-EG')+' جنيه</strong><br><small>اختيار عشوائي من المنيو.</small>';
-  btn.disabled=false;drinkSpinBusy=false;
+  btn.disabled=false;btn.textContent=document.documentElement.lang==='en'?'Try Again 🎲':'جرّب تاني 🎲';drinkSpinBusy=false;
  },8350);
 }
-</script></body></html>
+</script><style id="game-popup-motion">#modal.game-popup-enter.show{animation:gameBackdropIn .28s ease-out both}#modal.game-popup-enter.show .dialog{animation:gameDialogIn .36s cubic-bezier(.2,1.25,.35,1) both}#modal.game-popup-leave.show{animation:gameBackdropOut .24s ease-in both}#modal.game-popup-leave.show .dialog{animation:gameDialogOut .24s ease-in both}@keyframes gameBackdropIn{from{opacity:0}to{opacity:1}}@keyframes gameBackdropOut{from{opacity:1}to{opacity:0}}@keyframes gameDialogIn{from{opacity:0;transform:translateY(28px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes gameDialogOut{to{opacity:0;transform:translateY(18px) scale(.94)}}#payerWheel{will-change:transform}</style></body></html>
