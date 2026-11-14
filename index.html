@@ -1523,7 +1523,7 @@ const $=id=>document.getElementById(id);
 const isEn=()=>document.documentElement.lang==='en';
 const tr=(ar,en)=>isEn()?en:ar;
 const menu=()=>typeof pickoutMenu!=='undefined'?pickoutMenu.filter(x=>x&&Number(x[2])>=0):[];
-const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]));
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const random=a=>a[Math.floor(Math.random()*a.length)];
 const modal=$('showcaseGameModal'),content=$('showcaseGameContent');if(!modal||!content)return;
 window.closeShowcaseGame=()=>{modal.style.display='none';content.replaceChildren()};
