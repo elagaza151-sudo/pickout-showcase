@@ -44,9 +44,12 @@ function render(){
 async function refresh(){
 const [c,s]=await Promise.all([db.from('showcase_competition').select('*').order('id').limit(1).maybeSingle(),db.from('showcase_scores').select('display_name,points').order('points',{ascending:false}).limit(20)]);
 if(c.data){competition=c.data;const now=Date.now(),start=competition.starts_at?new Date(competition.starts_at):null,end=competition.ends_at?new Date(competition.ends_at):null;
+const english=localStorage.getItem('pickout-showcase-language')==='en';
 const state=competitionOpen()?localize('🟢 المسابقة شغالة','🟢 Competition is live'):start&&now<start.getTime()?localize('🕒 المسابقة لم تبدأ بعد','🕒 Competition has not started'):localize('🔴 المسابقة لم تبدأ بعد أو متوقفة','🔴 Competition has not started or is paused');
-$('competitionInfo').textContent=state+' — '+(localStorage.getItem('pickout-showcase-language')==='en'?'PICK & OUT Weekly Competition':competition.title)+' — '+localize('الجائزة: ','Prize: ')+(localStorage.getItem('pickout-showcase-language')==='en'&&/جائزة سيتم الإعلان عنها/.test(competition.prize)?'Prize to be announced':competition.prize);
-$('competitionDetails').textContent=localize('مسابقة أسبوعية مدتها 7 أيام. ','A seven-day weekly competition. ')+(start?localize('البداية: ','Start: ')+start.toLocaleString(localize('ar-EG','en-GB'))+' — ':localize('موعد البداية لم يحدده المدير بعد. ','The manager has not set the start date yet. '))+(end?localize('النهاية: ','End: ')+end.toLocaleString(localize('ar-EG','en-GB'))+'. ':'')+localize('النقاط تُحسب فقط أثناء المسابقة، والترتيب للاعبين المسجلين بـGoogle.','Points count only during the competition. Rankings are for players signed in with Google.');
+const competitionName=english?'PICK & OUT Weekly Competition':competition.title;
+const prize=english?(/جائزة سيتم الإعلان عنها|لم تحدد|لم يتم/.test(competition.prize||'')?'Prize to be announced':competition.prize):competition.prize;
+$('competitionInfo').textContent=state+' — '+competitionName+' — '+localize('الجائزة: ','Prize: ')+prize;
+$('competitionDetails').textContent=localize('مسابقة أسبوعية مدتها 7 أيام. ','A seven-day weekly competition. ')+(start?localize('البداية: ','Start: ')+start.toLocaleString(english?'en-GB':'ar-EG')+' — ':localize('موعد البداية لم يحدده المدير بعد. ','The manager has not set the start date yet. '))+(end?localize('النهاية: ','End: ')+end.toLocaleString(english?'en-GB':'ar-EG')+'. ':'')+localize('النقاط تُحسب فقط أثناء المسابقة، والترتيب للاعبين المسجلين بـGoogle.','Points count only during the competition. Rankings are for players signed in with Google.');
 }
 $('leaderboard').replaceChildren();if(s.error){$('leaderboard').textContent=localize('تعذر تحميل الترتيب','Unable to load leaderboard');return}
 if(!s.data?.length)$('leaderboard').textContent=localize('لسه مفيش مشاركين حقيقيين.','No real participants yet.');
@@ -107,7 +110,7 @@ function render(){
  observer.disconnect();
  const walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let node;
  while(node=walk.nextNode()){
-  if(node.parentElement?.closest('script,style,#arcadeLanguage'))continue;
+  if(node.parentElement?.closest('script,style,#arcadeLanguage,#competitionInfo,#competitionDetails,#authInfo,#leaderboard,#awardStatus,#gameClock'))continue;
   let source=sources.get(node);
   if(source===undefined){source=node.nodeValue;sources.set(node,source)}
   const translated=translate(source);
