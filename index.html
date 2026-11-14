@@ -1702,10 +1702,33 @@ function updateSplitInputs(){
 }
 function aiAskQuestion(){let prompts=['تحب حاجة سخنة ولا ساقعة؟','عايز قهوة بطعم واضح ولا حاجة فاكهية ومنعشة؟','نفسك في مشروب بس ولا نضيف ديسرت معاه؟','تحب الطعم حلو وغني ولا خفيف؟'];let r=document.getElementById('aiResult');r.hidden=false;r.textContent='سؤال الباريستا ليك: '+prompts[Math.floor(Math.random()*prompts.length)]}
 
-function aiRecommend(){const r=document.getElementById('aiResult');r.hidden=false;r.textContent='هنضيف نظام AI الجديد في الخطوة الجاية.'}
-function pickoutChatSend(){const r=document.getElementById('poAiChatHistory');if(r)r.textContent='هنضيف دردشة AI الجديدة في الخطوة الجاية.'}
+const showcaseAiEndpoint='https://lhkevukjvtyemleriskz.supabase.co/functions/v1/showcase-barista-ai';
 let pickoutChatHistory=[];
-
+const aiLang=()=>document.documentElement.lang==='en';
+async function callShowcaseAi(payload){
+ const response=await fetch(showcaseAiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error==='AI_NOT_CONFIGURED'?(aiLang()?'AI is not configured yet. The admin needs to add GEMINI_API_KEY in Supabase.':'الـAI لسه محتاج مفتاح Gemini في إعدادات Supabase.'):data.error||'AI service unavailable');
+ return data.answer;
+}
+function aiGetPreferences(){return {mood:document.getElementById('aiMood')?.value||'any',budget:document.getElementById('aiBudget')?.value||'',kind:document.getElementById('aiKind')?.value||'any',sweetness:document.getElementById('aiSweet')?.value||'any'}}
+async function aiRecommend(){
+ const result=document.getElementById('aiResult');if(!result)return;
+ result.hidden=false;result.textContent=aiLang()?'Finding your perfect drink…':'☕ بنختارلك حاجة تناسبك...';
+ const message=document.getElementById('aiFree')?.value?.trim()||(aiLang()?'Recommend something from the menu based on my preferences.':'رشحلي حاجة من المنيو على حسب اختياراتي');
+ try{result.textContent=await callShowcaseAi({mode:'recommend',message,preferences:aiGetPreferences()})}
+ catch(e){result.textContent='⚠️ '+e.message}
+}
+async function pickoutChatSend(){
+ const input=document.getElementById('poAiChatInput'),panel=document.getElementById('poAiChatHistory'),button=document.getElementById('poAiChatSend');if(!input||!panel||!button)return;
+ const message=input.value.trim();if(!message)return;
+ input.value='';button.disabled=true;
+ const add=(who,text)=>{const bubble=document.createElement('div');bubble.style.cssText='padding:11px 14px;border-radius:14px;white-space:pre-wrap;line-height:1.6;background:'+(who==='user'?'#276648':'#34291e')+';color:#fff';bubble.textContent=text;panel.appendChild(bubble);panel.scrollTop=panel.scrollHeight;return bubble};
+ add('user',message);const pending=add('model',aiLang()?'Thinking…':'☕ بفكر في رد مناسب...');
+ try{const answer=await callShowcaseAi({mode:'chat',message,history:pickoutChatHistory});pending.textContent=answer;pickoutChatHistory.push({role:'user',text:message},{role:'model',text:answer});pickoutChatHistory=pickoutChatHistory.slice(-8)}
+ catch(e){pending.textContent='⚠️ '+e.message}
+ finally{button.disabled=false;input.focus()}
+}
 let drinkSpinBusy=false;
 function startDrinkSpin(){
  if(drinkSpinBusy)return;
