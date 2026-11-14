@@ -3,7 +3,8 @@
 'use strict';
 const db=window.supabase.createClient(window.SHOWCASE_SUPABASE_URL,window.SHOWCASE_SUPABASE_PUBLISHABLE_KEY,{auth:{storageKey:'pickout-showcase-arcade-google-v1',detectSessionInUrl:true}});
 const sessions=new Map(), timers=new Map(), starting=new Map();
-function coords(){return new Promise((ok,no)=>{if(!navigator.geolocation)return no(Error('GPS unavailable'));navigator.geolocation.getCurrentPosition(p=>ok({p_lat:p.coords.latitude,p_lon:p.coords.longitude,p_accuracy:p.coords.accuracy}),no,{enableHighAccuracy:true,maximumAge:0,timeout:15000})})}
+function oneFix(timeout=10000){return new Promise((ok,no)=>{if(!navigator.geolocation)return no(Error('GPS unavailable'));navigator.geolocation.getCurrentPosition(p=>ok({p_lat:p.coords.latitude,p_lon:p.coords.longitude,p_accuracy:p.coords.accuracy}),no,{enableHighAccuracy:true,maximumAge:0,timeout})})}
+async function coords(){let best=null,lastError=null;for(let i=0;i<3;i++){try{const p=await oneFix(i===0?12000:7000);if(!best||p.p_accuracy<best.p_accuracy)best=p;if(best.p_accuracy<=100)return best}catch(e){lastError=e;if(e.code===1)throw e}if(i<2)await new Promise(r=>setTimeout(r,650))}if(best)return best;throw lastError||Error('GPS unavailable')}
 function hide(game){document.querySelectorAll('[data-gps-claim="'+game+'"]').forEach(b=>b.hidden=true)}
 function stop(game){starting.delete(game);clearInterval(timers.get(game));timers.delete(game);sessions.delete(game);hide(game)}
 function state(game){return sessions.get(game)||null}
