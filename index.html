@@ -1429,6 +1429,14 @@ body>header,body>main,body>footer{position:relative!important;z-index:2!importan
 #showcaseBackgroundDust{z-index:1!important;pointer-events:none!important}
 </style>
 
+<style id="showcase-match-original-nav-menu-v3">
+/* Exact navbar and glass declarations copied from the original PICK & OUT source. */
+header{position:fixed!important;top:0!important;right:0;left:0;z-index:100!important;background:rgba(28,14,9,.91)!important;border-bottom:1px solid #98603988!important;box-shadow:0 8px 35px #0007;backdrop-filter:blur(20px)}
+body>header{position:fixed!important;top:0!important;left:0!important;right:0!important;z-index:100!important}
+.section{background:linear-gradient(125deg,#24120cdd,#301a10d6);padding:30px!important;margin:28px 0;border:1px solid #c08c4a3b;border-radius:24px;backdrop-filter:blur(3px)}
+#menuCards .card{background:linear-gradient(145deg,rgba(54,33,22,.49),rgba(27,19,13,.62))!important;backdrop-filter:blur(2px)!important;-webkit-backdrop-filter:blur(2px)!important;box-shadow:0 10px 30px #0004!important;border-color:rgba(238,190,137,.24)!important}
+#menuCards .card{-webkit-backdrop-filter:blur(2px)!important}
+</style>
 </head>
 <style id="showcase-isolation">.cart-fab,.cart-drawer,#poCartDrawer,#poCartFab,#poFloatingCart,#poOrderTracker,#poCustomerAccount,#poLoginModal{display:none!important}.game-highlight .ico{font-size:58px;margin:20px auto}#menuCards>.card{transition:transform .45s ease,box-shadow .45s ease}#menuCards>.card:hover{transform:translateY(-9px) scale(1.025)}@media(max-width:767px){#menuCards>.card{opacity:1!important;transform:none!important}}
 /* Original held-hover zoom: only the card under the pointer moves */
@@ -1786,32 +1794,5 @@ function startDrinkSpin(){
   btn.disabled=false;btn.textContent=document.documentElement.lang==='en'?'Try Again 🎲':'جرّب تاني 🎲';drinkSpinBusy=false;
  },8350);
 }
-</script><style id="game-popup-motion">#modal.game-popup-enter.show{animation:gameBackdropIn .28s ease-out both}#modal.game-popup-enter.show .dialog{animation:gameDialogIn .36s cubic-bezier(.2,1.25,.35,1) both}#modal.game-popup-leave.show{animation:gameBackdropOut .24s ease-in both}#modal.game-popup-leave.show .dialog{animation:gameDialogOut .24s ease-in both}@keyframes gameBackdropIn{from{opacity:0}to{opacity:1}}@keyframes gameBackdropOut{from{opacity:1}to{opacity:0}}@keyframes gameDialogIn{from{opacity:0;transform:translateY(28px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes gameDialogOut{to{opacity:0;transform:translateY(18px) scale(.94)}}#payerWheel{will-change:transform}</style><style id="showcase-nav-and-glass-recovery-v2">
-/* Original fixed navigation, independent of scrolling and of the scene's layers. */
-html{scroll-padding-top:92px!important}
-body>header,header{
- position:fixed!important;top:0!important;left:0!important;right:0!important;
- width:100%!important;z-index:10000!important;
- background:rgba(28,14,9,.78)!important;
- backdrop-filter:blur(20px) saturate(1.18)!important;
- -webkit-backdrop-filter:blur(20px) saturate(1.18)!important;
- border-bottom:1px solid rgba(217,164,95,.35)!important;
- box-shadow:0 8px 35px rgba(0,0,0,.32)!important;
-}
-body>main{padding-top:max(105px,env(safe-area-inset-top))!important}
-#menu,.section{
- background:linear-gradient(125deg,rgba(36,18,12,.68),rgba(48,26,16,.62))!important;
- backdrop-filter:blur(13px) saturate(1.18)!important;
- -webkit-backdrop-filter:blur(13px) saturate(1.18)!important;
- border:1px solid rgba(192,140,74,.25)!important;
-}
-#menuCards .card,#showcaseOffersCards .card{
- background:linear-gradient(145deg,rgba(54,33,22,.58),rgba(27,19,13,.68))!important;
- backdrop-filter:blur(10px) saturate(1.2)!important;
- -webkit-backdrop-filter:blur(10px) saturate(1.2)!important;
- border-color:rgba(238,190,137,.24)!important;
- box-shadow:0 10px 30px rgba(0,0,0,.25)!important;
-}
-@media(max-width:767px){body>main{padding-top:92px!important}}
-</style>
+</script><style id="game-popup-motion">#modal.game-popup-enter.show{animation:gameBackdropIn .28s ease-out both}#modal.game-popup-enter.show .dialog{animation:gameDialogIn .36s cubic-bezier(.2,1.25,.35,1) both}#modal.game-popup-leave.show{animation:gameBackdropOut .24s ease-in both}#modal.game-popup-leave.show .dialog{animation:gameDialogOut .24s ease-in both}@keyframes gameBackdropIn{from{opacity:0}to{opacity:1}}@keyframes gameBackdropOut{from{opacity:1}to{opacity:0}}@keyframes gameDialogIn{from{opacity:0;transform:translateY(28px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes gameDialogOut{to{opacity:0;transform:translateY(18px) scale(.94)}}#payerWheel{will-change:transform}</style>
 </body></html>
